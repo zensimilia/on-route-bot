@@ -1,15 +1,9 @@
-import os
 import sqlite3
 from sqlite3 import Error
 from time import ctime
-from dotenv import load_dotenv
+from config import Config
 
-# Initialize environment variables from .env file
-dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path)
-
-DB_FILE = os.getenv("DB_FILE", 'data.sqlite')
+DB_FILE = Config.DB_FILE
 
 
 def post_sql_query(sql_query):
@@ -24,16 +18,46 @@ def post_sql_query(sql_query):
 
 
 def create_tables():
-    users_query = '''CREATE TABLE IF NOT EXISTS USERS 
-                        (id INTEGER PRIMARY KEY NOT NULL,
-                        username TEXT,
-                        reg_date TEXT);'''
+    users_query = '''
+        CREATE TABLE IF NOT EXISTS USERS 
+            (user_id INTEGER PRIMARY KEY NOT NULL,
+            username TEXT,
+            timezone TEXT,
+            reg_date TEXT);
+        
+        '''
+    routes_query = '''
+        CREATE TABLE IF NOT EXISTS ROUTES
+            (route_id INTEGER PRIMARY KEY NOT NULL,
+            user_id INTEGER,
+            url TEXT NOT NULL UNIQUE,
+            name TEXT,
+            is_active INTEGER);
+        '''
     post_sql_query(users_query)
+    post_sql_query(routes_query)
 
 
-def register_user(user, username):
-    user_check_query = f'SELECT * FROM USERS WHERE id = {user};'
+def register_user(user_id, username):
+    user_check_query = f'SELECT * FROM USERS WHERE user_id = {user_id};'
     user_check_data = post_sql_query(user_check_query)
     if not user_check_data:
-        insert_to_db_query = f'INSERT INTO USERS (id, username, reg_date) VALUES ({user}, "{username}", "{ctime()}");'
+        insert_to_db_query = f'INSERT INTO USERS (user_id, username, reg_date) VALUES ({user_id}, "{username}", "{ctime()}");'
         return post_sql_query(insert_to_db_query)
+
+
+def add_route(user_id, url, name, is_active=1):
+    insert_to_db_query = f'INSERT INTO ROUTES (user_id, url, name, is_active) VALUES ({user_id}, "{url}", "{name}", {is_active});'
+    return post_sql_query(insert_to_db_query)
+
+
+def get_routes(user_id, route_id=None):
+    get_routes_query = f'SELECT * FROM ROUTES WHERE user_id = {user_id};'
+    if route_id:
+        get_routes_query = f'SELECT * FROM ROUTES WHERE route_id = {route_id};'
+    return post_sql_query(get_routes_query)
+
+
+def add_user_timezone(user_id, timezone):
+    add_timezone_query = f'UPDATE USERS SET timezone = "{timezone}" WHERE user_id = {user_id};'
+    return post_sql_query(add_timezone_query)
