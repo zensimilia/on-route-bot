@@ -89,5 +89,11 @@ async def set_user_timezone(message: types.Message):
     else:
         await bot.send_message(message.chat.id, 'Cant get location.', reply_markup=types.ReplyKeyboardRemove())
 
+
+@dp.message_handler(commands=['map'])
+async def send_map_image(message: types.Message):
+    url = 'https://static-maps.yandex.ru/1.x/?l=map,trf&size=650,450&bbox=38.973102,45.021841~38.903821,45.075021'
+    await bot.send_photo(message.chat.id, caption='MAP', photo=url)
+
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
