@@ -1,4 +1,5 @@
 import db
+import time
 import logging
 import requests
 from config import Config
@@ -92,7 +93,8 @@ async def set_user_timezone(message: types.Message):
 
 @dp.message_handler(commands=['map'])
 async def send_map_image(message: types.Message):
-    url = 'https://static-maps.yandex.ru/1.x/?l=map,trf&size=650,450&bbox=38.973102,45.021841~38.903821,45.075021'
+    timestamp = time.ctime()
+    url = f'https://static-maps.yandex.ru/1.x/?l=map,trf&size=650,450&bbox=38.973102,45.021841~38.903821,45.075021&={timestamp}'
     await bot.send_photo(message.chat.id, caption='MAP', photo=url)
 
 if __name__ == '__main__':
