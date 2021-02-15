@@ -1,5 +1,4 @@
 import sqlite3
-from sqlite3 import Error
 from time import ctime
 from config import Config
 
@@ -11,31 +10,21 @@ def post_sql_query(sql_query):
         cursor = connection.cursor()
         try:
             cursor.execute(sql_query)
-        except Error:
+        except sqlite3.Error:
             pass
         result = cursor.fetchall()
         return result if result else cursor.lastrowid
 
 
 def create_tables():
-    users_query = '''
-        CREATE TABLE IF NOT EXISTS USERS 
-            (user_id INTEGER PRIMARY KEY NOT NULL,
-            username TEXT,
-            timezone TEXT,
-            reg_date TEXT);
-        
-        '''
-    routes_query = '''
-        CREATE TABLE IF NOT EXISTS ROUTES
-            (route_id INTEGER PRIMARY KEY NOT NULL,
-            user_id INTEGER,
-            url TEXT NOT NULL UNIQUE,
-            name TEXT,
-            is_active INTEGER);
-        '''
-    post_sql_query(users_query)
-    post_sql_query(routes_query)
+    with open('schema.sql', 'r') as f:
+        schema = f.read()
+    with sqlite3.connect(DB_FILE) as connection:
+        cursor = connection.cursor()
+        try:
+            cursor.executescript(schema)
+        except sqlite3.Error:
+            pass
 
 
 def register_user(user_id, username):
