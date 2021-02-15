@@ -3,8 +3,9 @@ from urllib import parse
 import requests
 
 url = 'https://yandex.ru/maps/-/CCUMf0bhoD'
+url2 = 'https://yandex.ru/maps/-/CCUMjUtEOB'
 headers = {'User-Agent': 'Mozilla/5.0'}
-response = requests.get(url, headers=headers)
+response = requests.get(url2, headers=headers)
 soup = BeautifulSoup(response.text, 'html.parser')
 items = soup.find('div', class_='auto-route-snippet-view__route-title-primary')
 print('time', items.text)
