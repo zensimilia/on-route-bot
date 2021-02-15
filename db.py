@@ -47,6 +47,12 @@ def get_routes(user_id, route_id=None):
     return post_sql_query(get_routes_query)
 
 
+def get_user_timezone(user_id):
+    get_timezone_query = f'SELECT timezone FROM USERS WHERE user_id = {user_id};'
+    timezone = post_sql_query(get_timezone_query)
+    return timezone if timezone else None
+
+
 def add_user_timezone(user_id, timezone):
     add_timezone_query = f'UPDATE USERS SET timezone = "{timezone}" WHERE user_id = {user_id};'
     return post_sql_query(add_timezone_query)
