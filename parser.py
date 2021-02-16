@@ -75,7 +75,14 @@ class YAMParser:
         """
         return self.soup.find('link', rel='canonical')['href']
 
-
-parser = YAMParser('https://yandex.ru/maps/-/CCUMf0bhoD')
-print(parser.time)
-print(parser.canonical)
+    @property
+    def map(self) -> str:
+        """
+        Returns URL of static map image with traffic layer.
+        """
+        rtext = parse.parse_qs(parse.urlparse(self.canonical).query)[
+            'rtext'][0].split('~')
+        swaprf = ','.join(reversed(rtext[0].split(',')))
+        swaprl = ','.join(reversed(rtext[-1].split(',')))
+        map_url = f'https://static-maps.yandex.ru/1.x/?l=map,trf&size=650,450&bbox={swaprf}~{swaprl}'
+        return map_url
