@@ -1,10 +1,12 @@
-import db
-import time
 import logging
+import time
+
 import requests
-from config import Config
-from aiogram.dispatcher.filters import Text
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.dispatcher.filters import Text
+
+import db
+from config import Config
 
 # Configure constants from environment
 BOT_TOKEN = Config.BOT_TOKEN
