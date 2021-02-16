@@ -1,10 +1,13 @@
-import db
-import time
 import logging
+import time
+from parser import YAMParser
+
 import requests
-from config import Config
-from aiogram.dispatcher.filters import Text
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.dispatcher.filters import Text
+
+import db
+from config import Config
 
 # Configure constants from environment
 BOT_TOKEN = Config.BOT_TOKEN
@@ -104,9 +107,11 @@ async def set_timezone_by_utc(message: types.Message):
 
 @dp.message_handler(commands=['map'])
 async def send_map_image(message: types.Message):
+    await bot.send_chat_action(message.from_user.id, action=types.ChatActions.TYPING)
     timestamp = time.ctime()
-    url = f'https://static-maps.yandex.ru/1.x/?l=map,trf&size=650,450&bbox=38.973102,45.021841~38.903821,45.075021&={timestamp}'
-    await message.answer_photo(url, caption='MAP')
+    yamp = YAMParser('https://yandex.ru/maps/-/CCUMf0bhoD')
+    url = f'{yamp.map}&={timestamp}'
+    await message.answer_photo(url, caption=f'Текущее время поездки: <b>{yamp.time}</b>. <a href="{yamp.url}">Открыть маршрут на картах</a>')
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
