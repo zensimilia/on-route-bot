@@ -4,6 +4,14 @@ import requests
 from bs4 import BeautifulSoup
 
 
+class YAParseError(Exception):
+    pass
+
+
+class YARequestError(Exception):
+    pass
+
+
 class YAWParser:
     """
     Class form parsing info about weather from Yandex Weather.
@@ -37,9 +45,14 @@ class YAWParser:
         """
         Get fact about current weather cast.
         """
+        classes = [
+            'weather-maps-fact__nowcast-alert',
+            'weather-maps-fact__condition'
+        ]
         if not hasattr(self, '_fact'):
+            # todo: check `weather-maps-fact__condition` if exception
             setattr(self, '_fact', self.get_text(
-                'div', class_='weather-maps-fact__nowcast-alert'))
+                    'div', class_=classes))
         return getattr(self, '_fact')
 
     def get_text(self, tag: str, class_: str) -> str:
@@ -50,11 +63,12 @@ class YAWParser:
         :param str class_: What class to parse.
         """
         try:
-            return self.soup.find(
-                tag, class_=class_).text
+            if class_.__class__.__name__ in ('list', 'tuple'):
+                return self.soup.find_all(tag, class_=class_)[0].text
+            else:
+                return self.soup.find(tag, class_=class_).text
         except Exception as e:
-            print(e)
-        return 'Что-то пошло не так!'
+            raise YAParseError('Что-то пошло не так!')
 
     @property
     def soup(self) -> BeautifulSoup:
@@ -75,10 +89,8 @@ class YAWParser:
         """
         try:
             response = requests.get(url, headers=self.HEADERS)
-            if response.status_code != 200:
-                return ''
         except Exception as e:
-            print(e)
+            raise YARequestError('Возникли проблемы с получением данных!')
         return response.text
 
 
@@ -152,7 +164,7 @@ class YAMParser:
             if response.status_code != 200:
                 return ''
         except Exception as e:
-            print(e)
+            raise YARequestError('Возникли проблемы с получением данных!')
         return response.text
 
     @property
@@ -160,7 +172,10 @@ class YAMParser:
         """
         Returns full page link from short URL.
         """
-        return self.soup.find('link', rel='canonical')['href']
+        try:
+            return self.soup.find('link', rel='canonical')['href']
+        except Exception as e:
+            raise YARequestError('Возникли проблемы с получением данных!')
 
     @property
     def map(self) -> str:

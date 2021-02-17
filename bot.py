@@ -1,13 +1,16 @@
 import logging
 import time
+from aiogram.types.inline_keyboard import InlineKeyboardMarkup
 
 import requests
-from mod.parser import YAMParser, YAWParser
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import Text
 
 import db
+import uchar  # unicode characters and emoji
+import keyboards
 from config import Config
+from mod.parser import YAMParser, YAParseError, YARequestError, YAWParser
 
 # Configure constants from environment
 BOT_TOKEN = Config.BOT_TOKEN
@@ -109,14 +112,31 @@ async def set_timezone_by_utc(message: types.Message):
 async def send_map_image(message: types.Message):
     await bot.send_chat_action(message.from_user.id, action=types.ChatActions.TYPING)
     timestamp = time.ctime()
-    degree_sign = u"\N{DEGREE SIGN}"
-    yamp = YAMParser('https://yandex.ru/maps/-/CCUMf0bhoD')
-    coords = yamp.coords
-    yawp = YAWParser(coords['lat'], coords['lon'])
-    temp = yawp.temp + f' {degree_sign}C'
-    fact = yawp.fact.capitalize() + '.'
-    url = f'{yamp.map}&={timestamp}'
-    await message.answer_photo(url, caption=f'Текущее время поездки: <b>{yamp.time}</b>. <a href="{yamp.url}">Открыть маршрут на картах</a>\nТемпература воздуха: {temp}\nПрогноз погоды: <i>{fact}</i>\n<a href="{yawp.url}">Открыть прогноз погоды</a>')
+    try:
+        yamp = YAMParser('https://yandex.ru/maps/-/CCUMf0bhoD')
+        map_center = yamp.coords
+        yawp = YAWParser(map_center['lat'], map_center['lon'])
+        temp = yawp.temp + f' {uchar.DEGREE}C'
+        fact = yawp.fact + '.'
+        map_url = f'{yamp.map}&={timestamp}'
+        inline_buttons = keyboards.route_buttons(
+            123, route_url=yamp.url, weather_url=yawp.url)
+        await message.answer_photo(map_url, caption=f'Время в пути: <b>{yamp.time}</b>.\nПрогноз погоды: <b>{temp}</b> {fact}\n', reply_markup=inline_buttons)
+    except (YAParseError, YARequestError) as e:
+        await message.answer(e)
+
+
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith('route_edit_'))
+async def process_callback_route_edit(callback_query: types.CallbackQuery):
+    route_id = callback_query.data.split('_')[-1]
+    # await bot.answer_callback_query(
+    #     callback_query.id,
+    #     text=f'route_id: {route_id}', show_alert=True)
+    # await bot.answer_callback_query(callback_query.id)
+    # await bot.send_message(callback_query.from_user.id, f'Редактировать маршрут {route_id}')
+    # await callback_query.answer(f'Редактировать маршрут {route_id}')
+    inline_buttons = keyboards.route_edit_buttons(123)
+    await bot.send_message(callback_query.from_user.id, f'Редактировать маршрут {route_id}', reply_markup=inline_buttons)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
