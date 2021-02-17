@@ -1,8 +1,8 @@
 import logging
 import time
-from parser import YAMParser
 
 import requests
+from mod.parser import YAMParser, YAWParser
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import Text
 
@@ -109,9 +109,14 @@ async def set_timezone_by_utc(message: types.Message):
 async def send_map_image(message: types.Message):
     await bot.send_chat_action(message.from_user.id, action=types.ChatActions.TYPING)
     timestamp = time.ctime()
+    degree_sign = u"\N{DEGREE SIGN}"
     yamp = YAMParser('https://yandex.ru/maps/-/CCUMf0bhoD')
+    coords = yamp.coords
+    yawp = YAWParser(coords['lat'], coords['lon'])
+    temp = yawp.temp + f' {degree_sign}C'
+    fact = yawp.fact.capitalize() + '.'
     url = f'{yamp.map}&={timestamp}'
-    await message.answer_photo(url, caption=f'Текущее время поездки: <b>{yamp.time}</b>. <a href="{yamp.url}">Открыть маршрут на картах</a>')
+    await message.answer_photo(url, caption=f'Текущее время поездки: <b>{yamp.time}</b>. <a href="{yamp.url}">Открыть маршрут на картах</a>\nТемпература воздуха: {temp}\nПрогноз погоды: <i>{fact}</i>\n<a href="{yawp.url}">Открыть прогноз погоды</a>')
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
