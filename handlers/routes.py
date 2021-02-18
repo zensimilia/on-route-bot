@@ -7,7 +7,8 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 import keyboards.common as keyboards
 import models.db as db
 import utils.uchar as uchar
-from mod.parser import YAMParser, YAParseError, YARequestError, YAWParser
+from mod.parser import YAMParser, YAWParser
+from utils.exceptions import YARequestError, YAParseError
 
 from .common import something_went_wrong
 

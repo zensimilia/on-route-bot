@@ -3,13 +3,7 @@ from urllib import parse
 import requests
 from bs4 import BeautifulSoup
 
-
-class YAParseError(Exception):
-    pass
-
-
-class YARequestError(Exception):
-    pass
+from utils.exceptions import YAParseError, YARequestError
 
 
 class YAWParser:
