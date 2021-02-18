@@ -161,8 +161,6 @@ class YAMParser:
         """
         try:
             response = requests.get(url, headers=self.HEADERS)
-            if response.status_code != 200:
-                return ''
         except Exception as e:
             raise YARequestError('Возникли проблемы с получением данных!')
         return response.text
