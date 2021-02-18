@@ -130,8 +130,7 @@ class YAMParser:
             return self.soup.find(
                 tag, class_=class_).text
         except Exception as e:
-            print(e)
-        return 'Что-то пошло не так!'
+            raise YAParseError('Что-то пошло не так!')
 
     @property
     def coords(self) -> dict:
@@ -171,7 +170,7 @@ class YAMParser:
         Returns full page link from short URL.
         """
         try:
-            return self.soup.find('link', rel='canonical')['href']
+            return parse.unquote(self.soup.find('link', rel='canonical')['href'])
         except Exception as e:
             raise YARequestError('Возникли проблемы с получением данных!')
 
