@@ -36,7 +36,7 @@ async def route_url_set(message: types.Message, state: FSMContext):
     # [ ] проверить url на валидность `message.text.lower()`
     # [x] добавить в базу маршрут
     # [x] сообщить что все хорошо
-    await state.update_data(url=message.text.lower())
+    await state.update_data(url=message.text)
     state_data = await state.get_data()
     db.add_route(message.from_user.id, state_data['url'], state_data['name'])
     await message.answer(f"Маршрут \"<b>{state_data['name']}</b>\" добавлен. \nПосмотреть список всех маршрутов /routes \nДобавить еще маршрут /routeadd", reply_markup=types.ReplyKeyboardRemove())
