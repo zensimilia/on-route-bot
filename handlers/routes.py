@@ -60,7 +60,16 @@ async def route_list(message: types.Message):
     if data is None:
         await message.answer('У вас нет сохраненных маршрутов. \nЧтобы добавить маршрут введите команду /routeadd')
         return
-    await message.answer('Ваши сохранённые маршруты:', reply_markup=keyboards.routes.route_list(data))
+    await message.answer('Выберите маршрут из списка ниже:', reply_markup=keyboards.routes.route_list(data))
+
+
+async def proccess_callback_route_list(callback_query: types.CallbackQuery):
+    # [ ] переделать вызов списка маршрутов на работу с `callback`
+    await callback_query.bot.delete_message(
+        callback_query.from_user.id, callback_query.message.message_id)
+    # при таком подходе в `message.from_user.id` не передается id пользователя,
+    # а уходит туда id бота или вообще ничего т.к. `message` отправил бот
+    await route_list(callback_query.message)
 
 
 async def route_show(message: types.Message, route_id: int):
@@ -105,12 +114,6 @@ async def route_show(message: types.Message, route_id: int):
 
 async def process_callback_route_edit(callback_query: types.CallbackQuery):
     route_id = callback_query.data.split('_')[-1]
-    # await bot.answer_callback_query(
-    #     callback_query.id,
-    #     text=f'route_id: {route_id}', show_alert=True)
-    # await bot.answer_callback_query(callback_query.id)
-    # await bot.send_message(callback_query.from_user.id, f'Редактировать маршрут {route_id}')
-    # await callback_query.answer(f'Редактировать маршрут {route_id}')
     await callback_query.message.answer(f'Редактировать маршрут {route_id}', reply_markup=keyboards.routes.route_edit_buttons(route_id))
     await callback_query.answer()
 
@@ -130,6 +133,11 @@ def register_handlers_routes(dp: Dispatcher):
     dp.register_message_handler(route_named, state=CreateRoute.name)
     dp.register_message_handler(route_url_set, state=CreateRoute.url)
     dp.register_callback_query_handler(
-        process_callback_route_edit, lambda c: c.data and c.data.startswith('route_edit_'))
+        proccess_callback_route_list,
+        lambda c: c.data and c.data == 'route_list')
     dp.register_callback_query_handler(
-        process_callback_route_select, lambda c: c.data and c.data.startswith('route_select_'))
+        process_callback_route_edit,
+        lambda c: c.data and c.data.startswith('route_edit_'))
+    dp.register_callback_query_handler(
+        process_callback_route_select,
+        lambda c: c.data and c.data.startswith('route_select_'))

@@ -17,7 +17,7 @@ def route_buttons(route_id: int, **kwargs) -> InlineKeyboardMarkup:
         f'{uchar.GEAR} Действия с маршрутом', callback_data=f'route_edit_{route_id}'
     )
     all_routes = InlineKeyboardButton(
-        'Список маршрутов', switch_inline_query_current_chat='/routes')
+        f'{uchar.BACK_ARROW} Назад к списку маршрутов', callback_data='route_list')
     inline_kb = InlineKeyboardMarkup()
     inline_kb.row(open_map, open_weather)
     inline_kb.add(edit_route)
