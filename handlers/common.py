@@ -2,6 +2,8 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 
+import utils.uchar as uchar
+
 
 async def cmd_start(message: types.Message):
     """
@@ -23,8 +25,15 @@ async def cmd_about(message: types.Message):
 
 
 async def cmd_cancel(message: types.Message, state: FSMContext):
+    """
+    Command to cancel any current state.
+    """
+    current_state = await state.get_state()
+    if current_state is None:
+        await message.answer(f"Нет активной комманды которую нужно отменить {uchar.SHRUGGING}")
+        return
     await state.finish()
-    await message.answer("Действие отменено", reply_markup=types.ReplyKeyboardRemove())
+    await message.answer(f"Команда отменена {uchar.OK_HAND}", reply_markup=types.ReplyKeyboardRemove())
 
 
 async def something_went_wrong(messsage: types.Message, error: str = None):
