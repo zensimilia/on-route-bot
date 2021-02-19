@@ -4,7 +4,8 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
-import keyboards.common as keyboards
+import keyboards.common
+import keyboards.routes
 import models.db as db
 import utils.uchar as uchar
 from providers.yandex import YAMParser, YAWParser
@@ -24,7 +25,7 @@ class CreateRoute(StatesGroup):
 
 async def route_start(message: types.Message):
     db.register_user(message.from_user.id, message.from_user.username)
-    await message.answer("<code>1/2</code> Введите имя маршрута. Например: <i>Дом-дача</i> или <i>Пробка на Мира</i>.", reply_markup=keyboards.cancel_button())
+    await message.answer("<code>1/2</code> Введите имя маршрута. Например: <i>Дом-дача</i> или <i>Пробка на Мира</i>.", reply_markup=keyboards.common.cancel_button())
     await CreateRoute.name.set()
 
 
@@ -34,7 +35,7 @@ async def route_named(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text)
     await CreateRoute.next()
     await message.answer("<code>2/2</code> Вставьте ссылку на страницу маршрута в <a href='https://maps.yandex.ru/'>Яндекс Картах</a>.",
-                         reply_markup=keyboards.cancel_button(),
+                         reply_markup=keyboards.common.cancel_button(),
                          disable_web_page_preview=True)
 
 
@@ -59,7 +60,7 @@ async def route_list(message: types.Message):
     if data is None:
         await message.answer('У вас нет сохраненных маршрутов. \nЧтобы добавить маршрут введите команду /routeadd')
         return
-    await message.answer('Ваши сохранённые маршруты:', reply_markup=keyboards.route_list(data))
+    await message.answer('Ваши сохранённые маршруты:', reply_markup=keyboards.routes.route_list(data))
 
 
 async def route_show(message: types.Message, route_id: int):
@@ -88,7 +89,7 @@ async def route_show(message: types.Message, route_id: int):
         # add timestamp to avoid image caching
         map_url = f'{yamp.map}&{timestamp}'
 
-        inline_buttons = keyboards.route_buttons(
+        inline_buttons = keyboards.routes.route_buttons(
             route_id,
             route_url=yamp.url,
             weather_url=yawp.url)
@@ -110,7 +111,8 @@ async def process_callback_route_edit(callback_query: types.CallbackQuery):
     # await bot.answer_callback_query(callback_query.id)
     # await bot.send_message(callback_query.from_user.id, f'Редактировать маршрут {route_id}')
     # await callback_query.answer(f'Редактировать маршрут {route_id}')
-    await callback_query.message.answer(callback_query.from_user.id, f'Редактировать маршрут {route_id}', reply_markup=keyboards.route_edit_buttons(route_id))
+    await callback_query.message.answer(f'Редактировать маршрут {route_id}', reply_markup=keyboards.routes.route_edit_buttons(route_id))
+    await callback_query.answer()
 
 
 async def process_callback_route_select(callback_query: types.CallbackQuery):
