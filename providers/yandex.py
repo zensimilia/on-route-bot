@@ -128,8 +128,11 @@ class YAMParser:
 
     @property
     def coords(self) -> dict:
-        coords = parse.parse_qs(parse.urlparse(self.canonical).query)[
-            'll'][0].split(',')
+        try:
+            coords = parse.parse_qs(parse.urlparse(self.canonical).query)[
+                'll'][0].split(',')
+        except Exception as e:
+            raise YAParseError('Что-то пошло не так!')
         return {
             'lon': float(coords[0]),
             'lat': float(coords[1]),
