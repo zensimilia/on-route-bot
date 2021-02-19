@@ -9,6 +9,7 @@ import models.db as db
 import utils.uchar as uchar
 from providers.yandex import YAMParser, YAWParser
 from utils.exceptions import YARequestError, YAParseError
+from utils.misc import is_url_valid
 
 from .common import something_went_wrong
 
@@ -23,24 +24,30 @@ class CreateRoute(StatesGroup):
 
 async def route_start(message: types.Message):
     db.register_user(message.from_user.id, message.from_user.username)
-    await message.answer("<code>1/2</code> Введите имя маршрута. Например: дом-дача.", reply_markup=keyboards.cancel_button())
+    await message.answer("<code>1/2</code> Введите имя маршрута. Например: <i>Дом-дача</i> или <i>Пробка на Мира</i>.", reply_markup=keyboards.cancel_button())
     await CreateRoute.name.set()
 
 
 async def route_named(message: types.Message, state: FSMContext):
+    if message.text[0] == '/' and message.text != '/cancel':
+        return
     await state.update_data(name=message.text)
     await CreateRoute.next()
-    await message.answer("<code>2/2</code> Вставьте ссылку на маршрут в Яндекс картах.", reply_markup=keyboards.cancel_button())
+    await message.answer("<code>2/2</code> Вставьте ссылку на страницу маршрута в <a href='https://maps.yandex.ru/'>Яндекс Картах</a>.",
+                         reply_markup=keyboards.cancel_button(),
+                         disable_web_page_preview=True)
 
 
 async def route_url_set(message: types.Message, state: FSMContext):
-    # [ ] проверить url на валидность `message.text.lower()`
-    # [x] добавить в базу маршрут
-    # [x] сообщить что все хорошо
+    if message.text[0] == '/' and message.text != '/cancel' or is_url_valid(message.text) is False:
+        return
     await state.update_data(url=message.text)
     state_data = await state.get_data()
     db.add_route(message.from_user.id, state_data['url'], state_data['name'])
-    await message.answer(f"Маршрут \"<b>{state_data['name']}</b>\" добавлен. \nПосмотреть список всех маршрутов /routes \nДобавить еще маршрут /routeadd", reply_markup=types.ReplyKeyboardRemove())
+    await message.answer(f"Маршрут \"<b>{state_data['name']}</b>\" добавлен. "
+                         "\nПосмотреть список всех маршрутов /routes "
+                         "\nДобавить еще маршрут /routeadd",
+                         reply_markup=types.ReplyKeyboardRemove())
     await state.finish()
 
 

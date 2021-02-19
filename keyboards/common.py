@@ -54,8 +54,8 @@ def route_list(routes: list) -> InlineKeyboardMarkup:
     :param list routes: List of all routes.
     """
     inline_kb = InlineKeyboardMarkup(row_width=1)
-    for idx, route in enumerate(routes, start=1):
+    for route in routes:
         route_button = InlineKeyboardButton(
-            f'{idx} {route[3]}', callback_data=f'route_select_{route[0]}')
+            f'{route[3]}', callback_data=f'route_select_{route[0]}')
         inline_kb.add(route_button)
     return inline_kb

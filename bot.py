@@ -31,14 +31,6 @@ register_handlers_routes(dp)
 db.create_tables()
 
 
-@dp.message_handler(commands=['about'])
-async def send_about(message: types.Message):
-    """
-    This handler will be called when user sends `/about` command
-    """
-    await message.answer("Hi! I'm the <b>Traffic Assistant Bot</b>. \nI will warn you about traffic jams on your route by schedule.")
-
-
 @dp.message_handler(commands=['tz'])
 async def get_user_location(message: types.Message):
     """

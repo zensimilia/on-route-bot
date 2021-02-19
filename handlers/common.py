@@ -3,6 +3,25 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 
 
+async def cmd_start(message: types.Message):
+    """
+    Show welcome message and register user.
+
+    :param obj message: Message object.
+    """
+    pass
+
+
+async def cmd_about(message: types.Message):
+    """
+    Show information about bot.
+    """
+    await message.answer("Hi! I'm the <b>Traffic Assistant Bot</b>. "
+                         "\nI will warn you about traffic jams and weather forecast on your route by schedule. "
+                         "\nI'am work yet with <a href='https://maps.yandex.com'>Yandex Maps</a> only.",
+                         disable_web_page_preview=True)
+
+
 async def cmd_cancel(message: types.Message, state: FSMContext):
     await state.finish()
     await message.answer("Действие отменено", reply_markup=types.ReplyKeyboardRemove())
@@ -22,6 +41,8 @@ async def something_went_wrong(messsage: types.Message, error: str = None):
 
 
 def register_handlers_common(dp: Dispatcher):
+    dp.register_message_handler(cmd_start, commands="start")
+    dp.register_message_handler(cmd_about, commands="about")
     dp.register_message_handler(cmd_cancel, commands="cancel", state="*")
     dp.register_message_handler(
         cmd_cancel,
