@@ -27,7 +27,6 @@ class CreateRoute(StatesGroup):
 
 
 async def route_start(message: types.Message):
-    db.register_user(message.from_user.id, message.from_user.username)
     await message.answer("<code>1/2</code> Введите имя маршрута. Например: <i>Дом-дача</i> или <i>Пробка на Мира</i>.", reply_markup=keyboards.common.cancel_button())
     await CreateRoute.name.set()
 
@@ -56,6 +55,9 @@ async def route_url_set(message: types.Message, state: FSMContext):
 
 
 async def route_all(message: types.Message):
+    """
+    Display list of all routes by `/routes` command.
+    """
     await route_list(message)
 
 
