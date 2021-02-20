@@ -3,6 +3,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 
 import utils.uchar as uchar
+import models.db as db
 
 
 async def cmd_start(message: types.Message):
@@ -11,7 +12,8 @@ async def cmd_start(message: types.Message):
 
     :param obj message: Message object.
     """
-    pass
+    db.register_user(message.from_user.id, message.from_user.username)
+    await message.answer('Welcome text!')
 
 
 async def cmd_about(message: types.Message):
