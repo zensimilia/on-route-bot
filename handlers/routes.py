@@ -11,8 +11,11 @@ import utils.uchar as uchar
 from providers.yandex import YAMParser, YAWParser
 from utils.exceptions import YARequestError, YAParseError
 from utils.misc import is_url_valid
+from keyboards.routes import cd_routes
 
 from .common import something_went_wrong
+
+from typing import Union
 
 
 class CreateRoute(StatesGroup):
@@ -52,24 +55,27 @@ async def route_url_set(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-async def route_list(message: types.Message):
+async def route_all(message: types.Message):
+    await route_list(message)
+
+
+async def route_list(entity: Union[types.Message, types.CallbackQuery]):
     """
     Display all user routes.
     """
-    data = db.get_routes(message.from_user.id)
-    if data is None:
-        await message.answer('У вас нет сохраненных маршрутов. \nЧтобы добавить маршрут введите команду /routeadd')
-        return
+    data = db.get_routes(entity.from_user.id)
+    # if data is None:
+    # await message.answer('У вас нет сохраненных маршрутов. \nЧтобы добавить маршрут введите команду /routeadd')
+    # return
+    # if isinstance(message, types.Message):
+    # await message.answer('Выберите маршрут из списка ниже:', reply_markup=keyboards.routes.route_list(data))
+    message = entity
+    if isinstance(entity, types.CallbackQuery):
+        await entity.bot.delete_message(entity.message.chat.id, entity.id)
+        message = entity.message
     await message.answer('Выберите маршрут из списка ниже:', reply_markup=keyboards.routes.route_list(data))
-
-
-async def proccess_callback_route_list(callback_query: types.CallbackQuery):
-    # [ ] переделать вызов списка маршрутов на работу с `callback`
-    await callback_query.bot.delete_message(
-        callback_query.from_user.id, callback_query.message.message_id)
-    # при таком подходе в `message.from_user.id` не передается id пользователя,
-    # а уходит туда id бота или вообще ничего т.к. `message` отправил бот
-    await route_list(callback_query.message)
+    # else:
+    # await message.message.edit_reply_markup(keyboards.routes.route_list(data))
 
 
 async def route_show(message: types.Message, route_id: int):
@@ -107,9 +113,21 @@ async def route_show(message: types.Message, route_id: int):
             map_url,
             caption=f'<b>Маршрут:</b> {route[3]} \n<b>Время в пути:</b> {time_left}. \n<b>Прогноз погоды:</b> {temp} {fact}\n',
             reply_markup=inline_buttons)
+        await message.delete()
 
     except (YAParseError, YARequestError) as e:
         await something_went_wrong(message, e)
+
+
+async def process_callback_routes(cb: types.CallbackQuery):
+    data = cd_routes.parse(cb.data)
+    action = data.get('action')
+    route_id = data.get('route_id')
+
+    if action == 'list':
+        await route_list(cb)
+    elif action == 'show':
+        await route_show(cb.message, route_id=int(route_id))
 
 
 async def process_callback_route_edit(callback_query: types.CallbackQuery):
@@ -119,7 +137,7 @@ async def process_callback_route_edit(callback_query: types.CallbackQuery):
 
 
 async def process_callback_route_select(callback_query: types.CallbackQuery):
-    route_id = callback_query.data.split('_')[-1]
+    route_id = callback_query.get('route_id')
     await route_show(callback_query.message, route_id)
     await callback_query.answer()
 
@@ -128,16 +146,9 @@ def register_handlers_routes(dp: Dispatcher):
     """
     Register routes handlers in Dispatcher.
     """
-    dp.register_message_handler(route_list, commands="routes")
+    dp.register_message_handler(route_all, commands="routes")
     dp.register_message_handler(route_start, commands="routeadd", state="*")
     dp.register_message_handler(route_named, state=CreateRoute.name)
     dp.register_message_handler(route_url_set, state=CreateRoute.url)
     dp.register_callback_query_handler(
-        proccess_callback_route_list,
-        lambda c: c.data and c.data == 'route_list')
-    dp.register_callback_query_handler(
-        process_callback_route_edit,
-        lambda c: c.data and c.data.startswith('route_edit_'))
-    dp.register_callback_query_handler(
-        process_callback_route_select,
-        lambda c: c.data and c.data.startswith('route_select_'))
+        process_callback_routes, cd_routes.filter())
