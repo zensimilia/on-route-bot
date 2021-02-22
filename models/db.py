@@ -40,6 +40,11 @@ def add_route(user_id, url, name, is_active=1):
     return post_sql_query(insert_to_db_query)
 
 
+def delete_route(user_id, route_id):
+    delete_query = f'DELETE FROM ROUTES WHERE route_id = {route_id}'
+    return post_sql_query(delete_query)
+
+
 def get_routes(user_id, route_id=None):
     get_routes_query = f'SELECT * FROM ROUTES WHERE user_id = {user_id};'
     if route_id:

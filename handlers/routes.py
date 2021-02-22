@@ -3,6 +3,7 @@ import time
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.types.callback_query import CallbackQuery
 
 import keyboards.common
 import keyboards.routes
@@ -78,12 +79,10 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
     Display all user routes.
     """
     data = db.get_routes(entity.from_user.id)
-    # if data is None:
-    # await message.answer('У вас нет сохраненных маршрутов. \nЧтобы добавить маршрут введите команду /routeadd')
-    # return
-    # if isinstance(message, types.Message):
-    # await message.answer('Выберите маршрут из списка ниже:', reply_markup=keyboards.routes.route_list(data))
     message = entity
+    if data is None:
+        await message.answer('У вас нет сохраненных маршрутов. \nЧтобы добавить маршрут введите команду /routeadd')
+        return
     if isinstance(entity, types.CallbackQuery):
         await entity.bot.delete_message(
             entity.message.chat.id, entity.message.message_id
@@ -93,8 +92,6 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
         "Выберите маршрут из списка ниже:",
         reply_markup=keyboards.routes.route_list(data),
     )
-    # else:
-    # await message.message.edit_reply_markup(keyboards.routes.route_list(data))
 
 
 async def route_show(message: types.Message, route_id: int):
@@ -147,15 +144,42 @@ async def process_callback_routes(cb: types.CallbackQuery):
         await route_list(cb)
     elif action == "show":
         await route_show(cb.message, route_id=int(route_id))
+    elif action == "edit":
+        await route_edit(cb, route_id=int(route_id))
+    elif action == "delete":
+        await route_delete(cb, route_id=int(route_id))
+    elif action == "delete_no":
+        await route_delete_no(cb)
+    elif action == "delete_confirm":
+        await route_delete_confirm(cb, route_id=int(route_id))
 
 
-async def process_callback_route_edit(callback_query: types.CallbackQuery):
-    route_id = callback_query.data.split("_")[-1]
-    await callback_query.message.answer(
-        f"Редактировать маршрут {route_id}",
-        reply_markup=keyboards.routes.route_edit_buttons(route_id),
-    )
-    await callback_query.answer()
+async def route_delete_no(cb: CallbackQuery):
+    await cb.message.delete()
+
+
+async def route_delete_confirm(cb: CallbackQuery, route_id: int):
+    """
+    Delete route from DB and send message.
+
+    :param int route_id: Route id.
+    """
+    db.delete_route(cb.from_user.id, route_id)
+    await cb.message.delete()
+    await cb.message.answer('Маршрут удален! Список всех маршрутов /routes')
+    pass
+
+
+async def route_delete(cb: types.CallbackQuery, route_id):
+    await cb.message.answer(
+        f'Вы уверены что хотите удалить маршрут <code>{route_id}</code>?', reply_markup=keyboards.routes.route_delete_confirm_buttons(route_id))
+    await cb.answer()
+
+
+async def route_edit(cb: types.CallbackQuery, route_id):
+    keyboard = keyboards.routes.route_edit_buttons(route_id)
+    await cb.message.edit_reply_markup(keyboard)
+    await cb.answer()
 
 
 async def process_callback_route_select(callback_query: types.CallbackQuery):
