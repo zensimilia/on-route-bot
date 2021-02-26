@@ -5,14 +5,14 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types.callback_query import CallbackQuery
 
-import keyboards.common
-import keyboards.routes
-import models.db as db
-import utils.uchar as uchar
-from providers.yandex import YAMParser, YAWParser
-from utils.exceptions import YARequestError, YAParseError
-from utils.misc import is_url_valid
-from keyboards.routes import cd_routes
+from app.keyboards.common import *
+from app.keyboards.routes import *
+from app.models import User, Route
+import app.utils.uchar as uchar
+from app.providers.yandex import YAMParser, YAWParser
+from app.utils.exceptions import YARequestError, YAParseError
+from app.utils.misc import is_url_valid
+from app.keyboards.routes import cd_routes
 
 from .common import something_went_wrong
 
@@ -31,7 +31,7 @@ class CreateRoute(StatesGroup):
 async def route_start(message: types.Message):
     await message.answer(
         "<code>1/2</code> Введите имя маршрута. Например: <i>Дом-дача</i> или <i>Пробка на Мира</i>.",
-        reply_markup=keyboards.common.cancel_button(),
+        reply_markup=cancel_button(),
     )
     await CreateRoute.name.set()
 
@@ -43,7 +43,7 @@ async def route_named(message: types.Message, state: FSMContext):
     await CreateRoute.next()
     await message.answer(
         "<code>2/2</code> Вставьте ссылку на страницу маршрута в <a href='https://maps.yandex.ru/'>Яндекс Картах</a>.",
-        reply_markup=keyboards.common.cancel_button(),
+        reply_markup=cancel_button(),
         disable_web_page_preview=True,
     )
 
@@ -57,7 +57,9 @@ async def route_url_set(message: types.Message, state: FSMContext):
         return
     await state.update_data(url=message.text)
     state_data = await state.get_data()
-    db.add_route(message.from_user.id, state_data["url"], state_data["name"])
+    current_user = User.get(User.uid == message.from_user.id)
+    Route.create(url=state_data["url"],
+                 name=state_data["name"], user=current_user)
     await message.answer(
         f"Маршрут \"<b>{state_data['name']}</b>\" добавлен. "
         "\n\nПосмотреть список всех маршрутов /routes "
@@ -78,9 +80,9 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
     """
     Display all user routes.
     """
-    data = db.get_routes(entity.from_user.id)
+    data = User.get(User.uid == entity.from_user.id).routes
     message = entity
-    if data is None:
+    if data.count() == 0:
         await message.answer('У вас нет сохраненных маршрутов. \nЧтобы добавить маршрут введите команду /routeadd')
         return
     if isinstance(entity, types.CallbackQuery):
@@ -90,7 +92,7 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
         message = entity.message
     await message.answer(
         "Выберите маршрут из списка ниже:",
-        reply_markup=keyboards.routes.route_list(data),
+        reply_markup=kb_route_list(data),
     )
 
 
@@ -104,10 +106,10 @@ async def route_show(message: types.Message, route_id: int):
     timestamp = time.ctime()
 
     # get user route from database
-    route = db.get_routes(message.from_user.id, route_id)[0]
+    route = Route.get(Route.id == route_id)
 
     try:
-        yamp = YAMParser(route[2])  # map parser instance
+        yamp = YAMParser(route.url)  # map parser instance
         map_center = yamp.coords
 
         # weather parser instance
@@ -120,13 +122,13 @@ async def route_show(message: types.Message, route_id: int):
         # add timestamp to avoid image caching
         map_url = f"{yamp.map}&{timestamp}"
 
-        inline_buttons = keyboards.routes.route_buttons(
+        inline_buttons = kb_route_buttons(
             route_id, route_url=yamp.url, weather_url=yawp.url
         )
 
         await message.answer_photo(
             map_url,
-            caption=f"<b>Маршрут:</b> {route[3]} \n<b>Время в пути:</b> {time_left}. \n<b>Прогноз погоды:</b> {temp} {fact}\n",
+            caption=f"<b>Маршрут:</b> {route.name} \n<b>Время в пути:</b> {time_left}. \n<b>Прогноз погоды:</b> {temp} {fact}\n",
             reply_markup=inline_buttons,
         )
         await message.delete()
@@ -164,7 +166,8 @@ async def route_delete_confirm(cb: CallbackQuery, route_id: int):
 
     :param int route_id: Route id.
     """
-    db.delete_route(cb.from_user.id, route_id)
+    # db.delete_route(cb.from_user.id, route_id)
+    Route.delete_by_id(route_id)
     await cb.message.delete()
     await cb.message.answer('Маршрут удален! Список всех маршрутов /routes')
     pass
@@ -172,12 +175,12 @@ async def route_delete_confirm(cb: CallbackQuery, route_id: int):
 
 async def route_delete(cb: types.CallbackQuery, route_id):
     await cb.message.answer(
-        f'Вы уверены что хотите удалить маршрут <code>{route_id}</code>?', reply_markup=keyboards.routes.route_delete_confirm_buttons(route_id))
+        f'Вы уверены что хотите удалить маршрут <code>{route_id}</code>?', reply_markup=kb_route_delete_confirm_buttons(route_id))
     await cb.answer()
 
 
 async def route_edit(cb: types.CallbackQuery, route_id):
-    keyboard = keyboards.routes.route_edit_buttons(route_id)
+    keyboard = kb_route_edit_buttons(route_id)
     await cb.message.edit_reply_markup(keyboard)
     await cb.answer()
 
