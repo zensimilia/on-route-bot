@@ -1,8 +1,9 @@
 import os
-from typing import get_type_hints, Union
+from typing import Union, get_type_hints
+
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv()  # reads the key-value pair from .env file and adds them to environment variable
 
 
 class AppConfigError(Exception):
@@ -14,7 +15,7 @@ def _parse_bool(val: Union[str, bool]) -> bool:  # pylint: disable=E1136
 
 
 """
-AppConfig class with required fields, default values, 
+AppConfig class with required fields, default values,
 type checking, and typecasting for int and bool values.
 """
 
