@@ -1,22 +1,20 @@
 import time
+from typing import Union
 
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types.callback_query import CallbackQuery
 
+import app.utils.uchar as uchar
 from app.keyboards.common import *
 from app.keyboards.routes import *
-from app.models import User, Route
-import app.utils.uchar as uchar
+from app.models import Route, User
 from app.providers.yandex import YAMParser, YAWParser
-from app.utils.exceptions import YARequestError, YAParseError
+from app.utils.exceptions import YAParseError, YARequestError
 from app.utils.misc import is_url_valid
-from app.keyboards.routes import cd_routes
 
 from .common import something_went_wrong
-
-from typing import Union
 
 
 class CreateRoute(StatesGroup):
@@ -30,7 +28,7 @@ class CreateRoute(StatesGroup):
 
 async def route_start(message: types.Message):
     await message.answer(
-        "<code>1/2</code> Введите имя маршрута. Например: <i>Дом-дача</i> или <i>Пробка на Мира</i>.",
+        "<code>1/2</code> Пожалуйста, выберите название для нового маршрута.",
         reply_markup=cancel_button(),
     )
     await CreateRoute.name.set()
@@ -42,7 +40,7 @@ async def route_named(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text)
     await CreateRoute.next()
     await message.answer(
-        "<code>2/2</code> Вставьте ссылку на страницу маршрута в <a href='https://maps.yandex.ru/'>Яндекс Картах</a>.",
+        '<code>2/2</code> Теперь пришлите ссылку на страницу маршрута в <a href="https: // maps.yandex.ru/">Яндекс Картах</a>. Скопируйте её из адресной строки или воспользуйтесь кнопкой "поделиться".',
         reply_markup=cancel_button(),
         disable_web_page_preview=True,
     )
@@ -62,8 +60,8 @@ async def route_url_set(message: types.Message, state: FSMContext):
                  name=state_data["name"], user=current_user)
     await message.answer(
         f"Маршрут \"<b>{state_data['name']}</b>\" добавлен. "
-        "\n\nПосмотреть список всех маршрутов /routes "
-        "\nДобавить новый маршрут /routeadd",
+        "\n\nПосмотрите список всех маршрутов командой /routes. "
+        "\nДобавьте еще один маршрут командой /routeadd.",
         reply_markup=types.ReplyKeyboardRemove(),
     )
     await state.finish()
@@ -83,7 +81,7 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
     data = User.get(User.uid == entity.from_user.id).routes
     message = entity
     if data.count() == 0:
-        await message.answer('У вас нет сохраненных маршрутов. \nЧтобы добавить маршрут введите команду /routeadd')
+        await message.answer('У Вас пока нет ни одного маршрута. Вы можете создать новый маршрут при помощи команды /routeadd.')
         return
     if isinstance(entity, types.CallbackQuery):
         await entity.bot.delete_message(
@@ -91,7 +89,7 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
         )
         message = entity.message
     await message.answer(
-        "Выберите маршрут из списка ниже:",
+        f"Выберите один из {data.count()} ваших маршрутов.",
         reply_markup=kb_route_list(data),
     )
 
@@ -166,16 +164,16 @@ async def route_delete_confirm(cb: CallbackQuery, route_id: int):
 
     :param int route_id: Route id.
     """
-    # db.delete_route(cb.from_user.id, route_id)
     Route.delete_by_id(route_id)
     await cb.message.delete()
-    await cb.message.answer('Маршрут удален! Список всех маршрутов /routes')
+    await cb.message.answer('Маршрут успешно удален. Посмотрите список всех маршрутов командой /routes.')
     pass
 
 
 async def route_delete(cb: types.CallbackQuery, route_id):
+    route_name = Route.get_by_id(route_id).name
     await cb.message.answer(
-        f'Вы уверены что хотите удалить маршрут <code>{route_id}</code>?', reply_markup=kb_route_delete_confirm_buttons(route_id))
+        f'Вы уверены, что хотите удалить маршрут <b>{route_name}</b>?', reply_markup=kb_route_delete_confirm_buttons(route_id))
     await cb.answer()
 
 
