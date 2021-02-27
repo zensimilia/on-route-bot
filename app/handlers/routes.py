@@ -40,7 +40,7 @@ async def route_named(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text)
     await CreateRoute.next()
     await message.answer(
-        '<code>2/2</code> Теперь пришлите ссылку на страницу маршрута в <a href="https: // maps.yandex.ru/">Яндекс Картах</a>. Скопируйте её из адресной строки или воспользуйтесь кнопкой "поделиться".',
+        '<code>2/2</code> Теперь пришлите ссылку на страницу маршрута в <a href="https://maps.yandex.ru/">Яндекс Картах</a>. Скопируйте её из адресной строки или воспользуйтесь кнопкой "поделиться".',
         reply_markup=cancel_button(),
         disable_web_page_preview=True,
     )
