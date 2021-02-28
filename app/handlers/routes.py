@@ -3,7 +3,6 @@ from typing import Union
 
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types.callback_query import CallbackQuery
 
 import app.utils.uchar as uchar
@@ -13,17 +12,9 @@ from app.models import Route, User
 from app.providers.yandex import YAMParser, YAWParser
 from app.utils.exceptions import YAParseError, YARequestError
 from app.utils.misc import is_url_valid
+from app.states.route_state import *
 
 from .common import something_went_wrong
-
-
-class CreateRoute(StatesGroup):
-    """
-    State class for creating route process.
-    """
-
-    name = State()
-    url = State()
 
 
 async def route_start(message: types.Message):
@@ -94,7 +85,7 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
     )
 
 
-async def route_show(message: types.Message, route_id: int):
+async def route_show(cb: types.CallbackQuery, route_id: int):
     """
     Show specific route information and action buttons.
 
@@ -124,15 +115,15 @@ async def route_show(message: types.Message, route_id: int):
             route_id, route_url=yamp.url, weather_url=yawp.url
         )
 
-        await message.answer_photo(
+        await cb.message.answer_photo(
             map_url,
             caption=f"<b>Маршрут:</b> {route.name} \n<b>Время в пути:</b> {time_left}. \n<b>Прогноз погоды:</b> {temp} {fact}\n",
             reply_markup=inline_buttons,
         )
-        await message.delete()
+        await cb.message.delete()
 
     except (YAParseError, YARequestError) as e:
-        await something_went_wrong(message, e)
+        await something_went_wrong(cb.message, e)
 
 
 async def process_callback_routes(cb: types.CallbackQuery):
@@ -140,10 +131,18 @@ async def process_callback_routes(cb: types.CallbackQuery):
     action = data.get("action")
     route_id = data.get("route_id")
 
+    # {
+    #     'list': await route_list(cb),
+    #     'show': await route_show(cb, route_id=int(route_id)),
+    #     'edit': await route_edit(cb, route_id=int(route_id)),
+    #     'delete': await route_delete(cb, route_id=int(route_id)),
+    #     'delete_no': await route_delete_no(cb),
+    #     'delete_confirm': await route_delete_confirm(cb, route_id=int(route_id)),
+    # }[action]()
     if action == "list":
         await route_list(cb)
     elif action == "show":
-        await route_show(cb.message, route_id=int(route_id))
+        await route_show(cb, route_id=int(route_id))
     elif action == "edit":
         await route_edit(cb, route_id=int(route_id))
     elif action == "delete":
@@ -183,10 +182,10 @@ async def route_edit(cb: types.CallbackQuery, route_id):
     await cb.answer()
 
 
-async def process_callback_route_select(callback_query: types.CallbackQuery):
-    route_id = callback_query.get("route_id")
-    await route_show(callback_query.message, route_id)
-    await callback_query.answer()
+async def process_callback_route_select(cb: types.CallbackQuery):
+    route_id = cb.get("route_id")
+    await route_show(cb.message, route_id)
+    await cb.answer()
 
 
 def register_handlers_routes(dp: Dispatcher):

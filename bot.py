@@ -7,6 +7,7 @@ import app.models
 from app.config import Config
 from app.handlers.common import register_handlers_common
 from app.handlers.routes import register_handlers_routes
+from app.handlers.settings import register_handlers_settings
 
 # configure logging
 logging_level = logging.DEBUG if Config.DEBUG else logging.INFO
@@ -21,6 +22,7 @@ def main():
     # registration handlers
     register_handlers_common(dp)
     register_handlers_routes(dp)
+    register_handlers_settings(dp)
 
     # initialize database and tables
     models = (
