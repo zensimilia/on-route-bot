@@ -5,6 +5,9 @@ from aiogram.dispatcher.filters import Text
 import app.utils.uchar as uchar
 from app.models import User
 
+from app.utils.scheduler import scheduler
+from apscheduler.triggers.cron import CronTrigger
+
 
 async def cmd_start(message: types.Message):
     """
@@ -51,7 +54,18 @@ async def something_went_wrong(messsage: types.Message, error: str = None):
     await messsage.answer(text)
 
 
+async def schedule_test(message: types.Message):
+    scheduler.add_job(say_hello, trigger=CronTrigger(
+        minute=56), id="job", kwargs={'message': message})
+    await message.answer('Test is run...')
+
+
+async def say_hello(message: types.Message):
+    await message.bot.send_message(chat_id=message.chat.id, text="Hello")
+
+
 def register_handlers_common(dp: Dispatcher):
+    dp.register_message_handler(schedule_test, commands="test")
     dp.register_message_handler(cmd_start, commands="start")
     dp.register_message_handler(cmd_about, commands="about")
     dp.register_message_handler(cmd_cancel, commands="cancel", state="*")

@@ -9,6 +9,9 @@ from app.handlers.common import register_handlers_common
 from app.handlers.routes import register_handlers_routes
 from app.handlers.settings import register_handlers_settings
 
+from app.utils.scheduler import scheduler
+
+
 # configure logging
 logging_level = logging.DEBUG if Config.DEBUG else logging.INFO
 logging.basicConfig(level=logging_level)
@@ -25,6 +28,8 @@ def on_startup():
         Route
     )
     db.create_tables(models)
+
+    scheduler.start()
 
 
 def main():
