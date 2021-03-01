@@ -17,20 +17,22 @@ def kb_route_buttons(route_id: int, **kwargs) -> InlineKeyboardMarkup:
     """
     cb_edit = cd_routes.new(action="edit", route_id=route_id)
     cb_back = cd_routes.new(action="list", route_id=0)
-    open_map = InlineKeyboardButton(
-        'Маршрут', url=kwargs['route_url'])
-    open_weather = InlineKeyboardButton(
-        'Погода', url=kwargs['weather_url'])
-    edit_route = InlineKeyboardButton(
-        f'{uchar.GEAR} Действия с маршрутом', callback_data=cb_edit
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton('Маршрут', url=kwargs['route_url']),
+                InlineKeyboardButton('Погода', url=kwargs['weather_url'])
+            ],
+            [InlineKeyboardButton(
+                f'{uchar.GEAR} Действия с маршрутом',
+                callback_data=cb_edit)
+             ],
+            [InlineKeyboardButton(
+                f'{uchar.BACK_ARROW} Назад к списку маршрутов',
+                callback_data=cb_back)
+             ]
+        ]
     )
-    all_routes = InlineKeyboardButton(
-        f'{uchar.BACK_ARROW} Назад к списку маршрутов', callback_data=cb_back)
-    inline_kb = InlineKeyboardMarkup()
-    inline_kb.row(open_map, open_weather)
-    inline_kb.add(edit_route)
-    inline_kb.add(all_routes)
-    return inline_kb
 
 
 def kb_route_delete_confirm_buttons(route_id: int) -> InlineKeyboardMarkup:
