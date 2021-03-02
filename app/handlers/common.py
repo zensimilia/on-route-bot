@@ -6,7 +6,7 @@ import app.utils.uchar as uchar
 from app.models import User
 from app.main import bot
 
-from app.utils.scheduler import scheduler
+from app.utils.scheduler import Scheduler
 from apscheduler.triggers.cron import CronTrigger
 
 
@@ -43,7 +43,7 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 
 
 async def schedule_test(message: types.Message):
-    scheduler.add_job(say_hello, trigger=CronTrigger(
+    Scheduler.add_job(say_hello, trigger=CronTrigger(
         minute='*/1'), id="job", kwargs={'chat': message.chat.id})
     await message.answer('Test is run...')
 
