@@ -42,19 +42,6 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
     await message.answer(f"Команда отменена {uchar.OK_HAND}", reply_markup=types.ReplyKeyboardRemove())
 
 
-async def something_went_wrong(messsage: types.Message, error: str = None):
-    """
-    Show error message when exception is raised.
-
-    :param obj message: Message object.
-    :param obj error: Error object with `__str__` method.
-    """
-    if error is None:
-        error = 'Что-то пошло не так!'
-    text = f'<b>{error}</b> \nПопробуйте позже или обратитесь к автору бота (ссылка в профиле).'
-    await messsage.answer(text)
-
-
 async def schedule_test(message: types.Message):
     scheduler.add_job(say_hello, trigger=CronTrigger(
         minute='*/1'), id="job", kwargs={'chat': message.chat.id})

@@ -1,6 +1,5 @@
 from aiogram import types, Dispatcher
 from aiogram.types.callback_query import CallbackQuery
-from aiogram.utils.callback_data import CallbackData
 from app.keyboards.settings import kb_settings, kb_settings_user_location, cd_settings
 
 

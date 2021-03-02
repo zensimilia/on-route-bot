@@ -10,11 +10,9 @@ from app.keyboards.common import *
 from app.keyboards.routes import *
 from app.models import Route, User
 from app.providers.yandex import YAMParser, YAWParser
-from app.utils.exceptions import YAParseError, YARequestError
-from app.utils.misc import is_url_valid
 from app.states.route_state import *
-
-from .common import something_went_wrong
+from app.utils.exceptions import YAParseError, YARequestError
+from app.utils.misc import is_url_valid, something_went_wrong
 
 
 async def route_start(message: types.Message):
