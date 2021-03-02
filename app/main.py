@@ -3,7 +3,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from app.config import Config
 from app.models import *
-from app.utils.scheduler import scheduler
+from app.utils.scheduler import Scheduler
 
 bot = Bot(token=Config.BOT_TOKEN, parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -28,7 +28,7 @@ async def on_startup(dispatcher: Dispatcher):
     db.create_tables(models)
 
     # start scheduler jobs
-    scheduler.start()
+    Scheduler.start()
 
     # set bot commands for autocomplete
     await set_bot_commands(bot)
