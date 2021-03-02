@@ -11,4 +11,4 @@ executors = {
     'default': AsyncIOExecutor()
 }
 
-scheduler = AsyncIOScheduler(jobstores=jobstores, executors=executors)
+Scheduler = AsyncIOScheduler(jobstores=jobstores, executors=executors)
