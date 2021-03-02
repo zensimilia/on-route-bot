@@ -8,30 +8,31 @@ import app.utils.uchar as uchar
 cd_routes = CallbackData("routes_menu", "action", "route_id")
 
 
-def kb_route_buttons(route_id: int, **kwargs) -> InlineKeyboardMarkup:
+def kb_route_buttons(route_id: int) -> InlineKeyboardMarkup:
     """
     Display keyboard for single route. Links to map, weather and edit route keyboard.
 
     :param int route_id: Active route id.
-    :param kwargs: Additional parameters `route_url` and `weather_url` for display links.
     """
     cb_edit = cd_routes.new(action="edit", route_id=route_id)
     cb_back = cd_routes.new(action="list", route_id=0)
+    cb_refresh = cd_routes.new(action="refresh", route_id=route_id)
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton('Маршрут', url=kwargs['route_url']),
-                InlineKeyboardButton('Погода', url=kwargs['weather_url'])
-            ],
-            [
                 InlineKeyboardButton(
-                    f'{uchar.GEAR} Действия с маршрутом',
+                    f'{uchar.GEAR} Настроить',
                     callback_data=cb_edit)
             ],
             [
                 InlineKeyboardButton(
-                    f'{uchar.BACK_ARROW} Назад к списку маршрутов',
-                    callback_data=cb_back)
+                    f'{uchar.BACK_ARROW} Назад',
+                    callback_data=cb_back),
+                InlineKeyboardButton(
+                    f'{uchar.REFRESH} Обновить',
+                    callback_data=cb_refresh
+                )
             ]
         ]
     )
@@ -60,26 +61,24 @@ def kb_route_edit_buttons(route_id: int) -> InlineKeyboardMarkup:
 
     :param int route_id: Active route id.
     """
-    cb_back = cd_routes.new(action="show", route_id=route_id)
+    cb_back = cd_routes.new(action="back", route_id=route_id)
     cb_delete = cd_routes.new(action="delete", route_id=route_id)
     cb_shedule = cd_routes.new(action="shedule", route_id=route_id)
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    f'{uchar.CLOCK} Настроить уведомление',
+                    f'{uchar.CLOCK} Уведомления',
                     callback_data=cb_shedule
                 )
             ],
             [
                 InlineKeyboardButton(
-                    f'{uchar.WASTEBASKET} Удалить маршрут',
-                    callback_data=cb_delete)
-            ],
-            [
+                    f'{uchar.BACK_ARROW} Назад',
+                    callback_data=cb_back),
                 InlineKeyboardButton(
-                    f'{uchar.BACK_ARROW} Назад к маршруту',
-                    callback_data=cb_back)
+                    f'{uchar.WASTEBASKET} Удалить',
+                    callback_data=cb_delete)
             ]
         ]
     )

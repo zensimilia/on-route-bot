@@ -21,7 +21,17 @@ bot = Bot(token=Config.BOT_TOKEN, parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
 
-def on_startup():
+async def set_bot_commands(bot: Bot):
+    commands = [
+        types.BotCommand('routes', 'список всех маршрутов'),
+        types.BotCommand('routeadd', 'добавить маршрут'),
+        types.BotCommand('about', 'информация о боте'),
+        types.BotCommand('cancel', 'отменить текущую команду')
+    ]
+    await bot.set_my_commands(commands)
+
+
+async def on_startup(dispatcher: Dispatcher):
     # initialize database and tables
     models = (
         User,
@@ -29,7 +39,11 @@ def on_startup():
     )
     db.create_tables(models)
 
+    # start scheduler jobs
     scheduler.start()
+
+    # set bot commands for autocomplete
+    await set_bot_commands(bot)
 
 
 def main():
@@ -39,7 +53,7 @@ def main():
     register_handlers_settings(dp)
 
     # start bot polling
-    executor.start_polling(dp, skip_updates=True, on_startup=on_startup())
+    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
 
 
 if __name__ == '__main__':

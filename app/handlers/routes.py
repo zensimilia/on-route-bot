@@ -62,29 +62,35 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
     """
     Display all user routes by command or callback query.
     """
+    message = 'У Вас пока нет ни одного маршрута. Вы можете создать новый маршрут при помощи команды /routeadd.'
+    keyboard = None
+
     data = User.get(User.uid == entity.from_user.id).routes
-    message = entity
-    if data.count() == 0:
-        await message.answer('У Вас пока нет ни одного маршрута. Вы можете создать новый маршрут при помощи команды /routeadd.')
-        return
+    if data.count():
+        message = f"Выберите один из ваших маршрутов."
+        keyboard = kb_route_list(data)
+
     if isinstance(entity, types.CallbackQuery):
-        await entity.bot.delete_message(
-            entity.message.chat.id, entity.message.message_id
-        )
-        message = entity.message
-    await message.answer(
-        f"Выберите один из {data.count()} ваших маршрутов.",
-        reply_markup=kb_route_list(data),
+        entity = entity.message
+        await entity.delete()
+
+    await entity.answer(
+        message,
+        reply_markup=keyboard,
     )
 
 
-async def route_show(cb: types.CallbackQuery, route_id: int):
+async def route_show(cb: types.CallbackQuery, route_id: int, back: bool = None):
     """
     Show specific route information and action buttons.
 
     :param obj message: Message object.
     :param int route_id: Route id.
     """
+    if back:
+        await cb.message.edit_reply_markup(kb_route_buttons(route_id))
+        return
+
     timestamp = time.ctime()
 
     # get user route from database
@@ -97,21 +103,18 @@ async def route_show(cb: types.CallbackQuery, route_id: int):
         # weather parser instance
         yawp = YAWParser(map_center["lat"], map_center["lon"])
 
-        temp = yawp.temp + f" {uchar.DEGREE}C"
-        fact = yawp.fact + "."
+        temp = yawp.temp + f"{uchar.DEGREE}C"
+        fact = yawp.fact
         time_left = yamp.time
 
         # add timestamp to avoid image caching
         map_url = f"{yamp.map}&{timestamp}"
 
-        inline_buttons = kb_route_buttons(
-            route_id, route_url=yamp.url, weather_url=yawp.url
-        )
-
         await cb.message.answer_photo(
             map_url,
-            caption=f"<b>Маршрут:</b> {route.name} \n<b>Время в пути:</b> {time_left}. \n<b>Прогноз погоды:</b> {temp} {fact}\n",
-            reply_markup=inline_buttons,
+            caption=str(f'Маршрут <b>"{route.name}"</b> займет <b>{time_left}</b> <a href="{yamp.url}">(открыть)</a>. '
+                        f'За окном <b>{temp}</b> {fact} <a href="{yawp.url}">(подробнее)</a>.'),
+            reply_markup=kb_route_buttons(route_id),
         )
         await cb.message.delete()
 
@@ -125,8 +128,10 @@ async def process_callback_routes(cb: types.CallbackQuery):
 
     if action == "list":
         await route_list(cb)
-    elif action == "show":
+    elif action in ["show", "refresh"]:
         await route_show(cb, route_id=int(route_id))
+    elif action == "back":
+        await route_show(cb, route_id=int(route_id), back=True)
     elif action == "edit":
         await route_edit(cb, route_id=int(route_id))
     elif action == "delete":
