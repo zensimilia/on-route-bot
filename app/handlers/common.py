@@ -1,4 +1,5 @@
 from aiogram import Dispatcher, types
+from aiogram import dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 
@@ -56,12 +57,14 @@ async def something_went_wrong(messsage: types.Message, error: str = None):
 
 async def schedule_test(message: types.Message):
     scheduler.add_job(say_hello, trigger=CronTrigger(
-        minute=56), id="job", kwargs={'message': message})
+        minute='*/1'), id="job", kwargs={'chat': message.chat.id})
     await message.answer('Test is run...')
 
 
-async def say_hello(message: types.Message):
-    await message.bot.send_message(chat_id=message.chat.id, text="Hello")
+async def say_hello(chat: int):
+    import datetime
+    bot = Dispatcher.get_current().bot
+    await bot.send_message(chat_id=chat, text=f"Hello! Current time is: {datetime.datetime.now()}")
 
 
 def register_handlers_common(dp: Dispatcher):
