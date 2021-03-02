@@ -4,6 +4,7 @@ from aiogram.dispatcher.filters import Text
 
 import app.utils.uchar as uchar
 from app.models import User
+from app.main import bot
 
 from app.utils.scheduler import scheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -62,7 +63,6 @@ async def schedule_test(message: types.Message):
 
 async def say_hello(chat: int):
     import datetime
-    bot = Dispatcher.get_current().bot
     await bot.send_message(chat_id=chat, text=f"Hello! Current time is: {datetime.datetime.now()}")
 
 
