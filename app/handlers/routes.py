@@ -58,16 +58,9 @@ async def route_url_set(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-async def route_all(message: types.Message):
-    """
-    Display list of all routes by `/routes` command.
-    """
-    await route_list(message)
-
-
 async def route_list(entity: Union[types.Message, types.CallbackQuery]):
     """
-    Display all user routes.
+    Display all user routes by command or callback query.
     """
     data = User.get(User.uid == entity.from_user.id).routes
     message = entity
@@ -128,17 +121,8 @@ async def route_show(cb: types.CallbackQuery, route_id: int):
 
 async def process_callback_routes(cb: types.CallbackQuery):
     data = cd_routes.parse(cb.data)
-    action = data.get("action")
-    route_id = data.get("route_id")
+    action, route_id = data['action'], data['route_id']
 
-    # {
-    #     'list': await route_list(cb),
-    #     'show': await route_show(cb, route_id=int(route_id)),
-    #     'edit': await route_edit(cb, route_id=int(route_id)),
-    #     'delete': await route_delete(cb, route_id=int(route_id)),
-    #     'delete_no': await route_delete_no(cb),
-    #     'delete_confirm': await route_delete_confirm(cb, route_id=int(route_id)),
-    # }[action]()
     if action == "list":
         await route_list(cb)
     elif action == "show":
@@ -192,7 +176,7 @@ def register_handlers_routes(dp: Dispatcher):
     """
     Register routes handlers in Dispatcher.
     """
-    dp.register_message_handler(route_all, commands="routes")
+    dp.register_message_handler(route_list, commands="routes")
     dp.register_message_handler(route_start, commands="routeadd", state="*")
     dp.register_message_handler(route_named, state=CreateRoute.name)
     dp.register_message_handler(route_url_set, state=CreateRoute.url)

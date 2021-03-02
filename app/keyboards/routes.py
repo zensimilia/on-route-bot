@@ -62,8 +62,15 @@ def kb_route_edit_buttons(route_id: int) -> InlineKeyboardMarkup:
     """
     cb_back = cd_routes.new(action="show", route_id=route_id)
     cb_delete = cd_routes.new(action="delete", route_id=route_id)
+    cb_shedule = cd_routes.new(action="shedule", route_id=route_id)
     return InlineKeyboardMarkup(
         inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    f'{uchar.CLOCK} Настроить уведомление',
+                    callback_data=cb_shedule
+                )
+            ],
             [
                 InlineKeyboardButton(
                     f'{uchar.WASTEBASKET} Удалить маршрут',
