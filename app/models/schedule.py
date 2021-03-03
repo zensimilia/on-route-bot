@@ -1,4 +1,4 @@
-from peewee import *
+from peewee import BlobField, BooleanField, ForeignKeyField
 from .base import BaseModel
 from .route import Route
 

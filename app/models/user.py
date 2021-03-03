@@ -1,4 +1,4 @@
-from peewee import *
+from peewee import CharField, BitField
 from .base import BaseModel
 
 

@@ -1,4 +1,4 @@
-from peewee import *
+from peewee import Model, AutoField, TimestampField, SqliteDatabase
 from app.config import Config
 
 db = SqliteDatabase(Config.DB_FILE)
