@@ -20,6 +20,9 @@ async def set_bot_commands(bot: Bot):
 
 
 async def on_startup(dp: Dispatcher):
+    """
+    Execute function before Bot start polling.
+    """
     # initialize database and tables
     models = (
         User,
@@ -35,4 +38,9 @@ async def on_startup(dp: Dispatcher):
 
 
 async def on_shutdown(dp: Dispatcher):
+    """
+    Execute function before Bot shut down polling.
+    """
+    # remove all jobs and shut down the Scheduler
+    Scheduler.remove_all_jobs()
     Scheduler.shutdown()
