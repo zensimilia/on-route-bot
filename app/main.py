@@ -19,7 +19,7 @@ async def set_bot_commands(bot: Bot):
     await bot.set_my_commands(commands)
 
 
-async def on_startup(dispatcher: Dispatcher):
+async def on_startup(dp: Dispatcher):
     # initialize database and tables
     models = (
         User,
@@ -32,3 +32,7 @@ async def on_startup(dispatcher: Dispatcher):
 
     # set bot commands for autocomplete
     await set_bot_commands(bot)
+
+
+async def on_shutdown(dp: Dispatcher):
+    Scheduler.shutdown()
