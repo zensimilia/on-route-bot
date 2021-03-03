@@ -26,7 +26,8 @@ async def on_startup(dp: Dispatcher):
     # initialize database and tables
     models = (
         User,
-        Route
+        Route,
+        Schedule
     )
     db.create_tables(models)
 

@@ -3,7 +3,19 @@ from urllib import parse
 import requests
 from bs4 import BeautifulSoup
 
-from app.utils.exceptions import YAParseError, YARequestError
+
+class YAParseError(Exception):
+    """
+    Raised when parser can't return necessary result.
+    """
+    pass
+
+
+class YARequestError(Exception):
+    """
+    Raised when parser have problems with request document.
+    """
+    pass
 
 
 class YAWParser:

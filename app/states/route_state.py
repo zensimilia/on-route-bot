@@ -8,3 +8,12 @@ class CreateRoute(StatesGroup):
 
     name = State()
     url = State()
+
+
+class CreateSchedule(StatesGroup):
+    """
+    State class for creating schedule for route.
+    """
+
+    time = State()
+    days = State()
