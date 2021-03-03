@@ -10,8 +10,8 @@ from app.keyboards.common import *
 from app.keyboards.routes import *
 from app.models import Route, User, Schedule
 from app.providers.yandex import YAMParser, YAWParser, YAParseError, YARequestError
-from app.states import CreateRoute
-from app.utils.misc import is_url_valid, something_went_wrong
+from app.states import CreateRoute, CreateSchedule
+from app.utils.misc import is_url_valid, something_went_wrong, is_time_format
 
 
 async def route_start(message: types.Message):
@@ -137,9 +137,27 @@ async def process_callback_routes(cb: types.CallbackQuery):
         await route_delete_no(cb)
     elif action == "delete_confirm":
         await route_delete_confirm(cb, route_id=int(route_id))
+    elif action == "schedule":
+        await route_edit_schedule(cb, route_id=route_id)
 
 
-async def route_delete_no(cb: CallbackQuery):
+async def route_edit_schedule(cb: types.CallbackQuery, route_id: int):
+    await cb.message.answer(
+        '<code>1/2</code> Пожалуйста, введите желаемое время уведомления о маршруте в формате <code>ЧЧ:ММ</code>.')
+    await CreateSchedule.time.set()
+
+
+async def route_schedule_time_set(message: types.Message, state: FSMContext):
+    if message.text[0] == "/" and message.text != "/cancel":
+        return
+    if is_time_format(message.text):
+        await state.update_data(time=message.text)
+        await CreateSchedule.next()
+        await message.answer('<code>2/2</code> Теперь выберите дни, в которые надо получать уведомления.', reply_markup=kb_schedule_days())
+    return
+
+
+async def route_delete_no(cb: types.CallbackQuery):
     await cb.message.delete()
 
 
@@ -182,5 +200,7 @@ def register_handlers_routes(dp: Dispatcher):
     dp.register_message_handler(route_start, commands="routeadd", state="*")
     dp.register_message_handler(route_named, state=CreateRoute.name)
     dp.register_message_handler(route_url_set, state=CreateRoute.url)
+    dp.register_message_handler(
+        route_schedule_time_set, state=CreateSchedule.time)
     dp.register_callback_query_handler(
         process_callback_routes, cd_routes.filter())
