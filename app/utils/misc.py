@@ -2,7 +2,7 @@ import re
 from aiogram import types
 
 
-def is_url_valid(url: str):
+def is_url_valid(url: str) -> bool:
     """
     Check string for valid URL.
 
@@ -13,6 +13,16 @@ def is_url_valid(url: str):
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))'
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
     return re.match(regex, url) is not None
+
+
+def is_time_format(time: str) -> bool:
+    """
+    Check string for valid time HH:MM format.
+
+    :param str time:
+    """
+    regex = re.compile(r'^(([01]\d|2[0-3]):([0-5]\d)|24:00)$')
+    return bool(regex.match(time))
 
 
 async def something_went_wrong(messsage: types.Message, error: str = None):
