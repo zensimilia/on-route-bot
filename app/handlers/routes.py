@@ -10,7 +10,7 @@ from app.keyboards.common import *
 from app.keyboards.routes import *
 from app.models import Route, User, Schedule
 from app.providers.yandex import YAMParser, YAWParser, YAParseError, YARequestError
-from app.states.route_state import *
+from app.states import CreateRoute
 from app.utils.misc import is_url_valid, something_went_wrong
 
 
