@@ -63,7 +63,7 @@ def kb_route_edit_buttons(route_id: int) -> InlineKeyboardMarkup:
     """
     cb_back = cd_routes.new(action="back", route_id=route_id)
     cb_delete = cd_routes.new(action="delete", route_id=route_id)
-    cb_shedule = cd_routes.new(action="shedule", route_id=route_id)
+    cb_shedule = cd_routes.new(action="schedule", route_id=route_id)
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
