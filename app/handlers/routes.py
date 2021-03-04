@@ -1,8 +1,9 @@
+from re import split
 import time
-from typing import Union
+from typing import Text, Union
 
 from aiogram import Dispatcher, types
-from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher import FSMContext, filters
 from aiogram.types.callback_query import CallbackQuery
 
 import app.utils.uchar as uchar
@@ -14,17 +15,15 @@ from app.states import CreateRoute, CreateSchedule
 from app.utils.misc import is_url_valid, something_went_wrong, is_time_format
 
 
-async def route_start(message: types.Message):
+async def route_add(message: types.Message):
+    await CreateRoute.name.set()
     await message.answer(
         "<code>1/2</code> Пожалуйста, выберите название для нового маршрута.",
         reply_markup=cancel_button(),
     )
-    await CreateRoute.name.set()
 
 
-async def route_named(message: types.Message, state: FSMContext):
-    if message.text[0] == "/" and message.text != "/cancel":
-        return
+async def route_add_name(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text)
     await CreateRoute.next()
     await message.answer(
@@ -34,13 +33,7 @@ async def route_named(message: types.Message, state: FSMContext):
     )
 
 
-async def route_url_set(message: types.Message, state: FSMContext):
-    if (
-        message.text[0] == "/"
-        and message.text != "/cancel"
-        or is_url_valid(message.text) is False
-    ):
-        return
+async def route_add_url(message: types.Message, state: FSMContext):
     await state.update_data(url=message.text)
     state_data = await state.get_data()
     current_user = User.get(User.uid == message.from_user.id)
@@ -53,6 +46,14 @@ async def route_url_set(message: types.Message, state: FSMContext):
         reply_markup=types.ReplyKeyboardRemove(),
     )
     await state.finish()
+
+
+async def route_add_error(message: types.Message, state: FSMContext):
+    current_state = split(':', await state.get_state())[-1]
+    if current_state == 'name':
+        await message.answer('Это не похоже на название маршрута. Попробуйте что-нибудь другое.')
+    else:
+        await message.answer('Наверное в ссылке допущена ошибка. Проверьте и попробуйте еще раз.')
 
 
 async def route_list(entity: Union[types.Message, types.CallbackQuery]):
@@ -197,9 +198,16 @@ def register_handlers_routes(dp: Dispatcher):
     Register routes handlers in Dispatcher.
     """
     dp.register_message_handler(route_list, commands="routes")
-    dp.register_message_handler(route_start, commands="routeadd", state="*")
-    dp.register_message_handler(route_named, state=CreateRoute.name)
-    dp.register_message_handler(route_url_set, state=CreateRoute.url)
+    dp.register_message_handler(route_add, commands="routeadd", state="*")
+    dp.register_message_handler(route_add_name,
+                                lambda message: message.text[0] != '/',
+                                state=CreateRoute.name)
+    dp.register_message_handler(route_add_url,
+                                lambda message: is_url_valid(message.text),
+                                state=CreateRoute.url)
+    dp.register_message_handler(route_add_error,
+
+                                state=CreateRoute)
     dp.register_message_handler(
         route_schedule_time_set, state=CreateSchedule.time)
     dp.register_callback_query_handler(
