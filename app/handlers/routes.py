@@ -1,21 +1,25 @@
-from re import split
 import time
-from typing import Text, Union
+from re import split
+from typing import Union
 
 from aiogram import Dispatcher, types
-from aiogram.dispatcher import FSMContext, filters
+from aiogram.dispatcher import FSMContext
 from aiogram.types.callback_query import CallbackQuery
 
 import app.utils.uchar as uchar
 from app.keyboards.common import *
 from app.keyboards.routes import *
-from app.models import Route, User, Schedule
-from app.providers.yandex import YAMParser, YAWParser, YAParseError, YARequestError
+from app.models import Route, User
+from app.providers.yandex import (YAMParser, YAParseError, YARequestError,
+                                  YAWParser)
 from app.states import CreateRoute, CreateSchedule
-from app.utils.misc import is_url_valid, something_went_wrong, is_time_format
+from app.utils.misc import is_time_format, is_url_valid, something_went_wrong
 
 
 async def route_add(message: types.Message):
+    """
+    Start create new route process.
+    """
     await CreateRoute.name.set()
     await message.answer(
         "<code>1/2</code> Пожалуйста, выберите название для нового маршрута.",
@@ -24,6 +28,9 @@ async def route_add(message: types.Message):
 
 
 async def route_add_name(message: types.Message, state: FSMContext):
+    """
+    Set route name to state and send message url request.
+    """
     await state.update_data(name=message.text)
     await CreateRoute.next()
     await message.answer(
@@ -34,6 +41,9 @@ async def route_add_name(message: types.Message, state: FSMContext):
 
 
 async def route_add_url(message: types.Message, state: FSMContext):
+    """
+    Set route url and create route from state.
+    """
     await state.update_data(url=message.text)
     state_data = await state.get_data()
     current_user = User.get(User.uid == message.from_user.id)
@@ -49,11 +59,16 @@ async def route_add_url(message: types.Message, state: FSMContext):
 
 
 async def route_add_error(message: types.Message, state: FSMContext):
+    """
+    Handle errors in create route process.
+    """
     current_state = split(':', await state.get_state())[-1]
     if current_state == 'name':
         await message.answer('Это не похоже на название маршрута. Попробуйте что-нибудь другое.')
-    else:
+    elif current_state == 'url':
         await message.answer('Наверное в ссылке допущена ошибка. Проверьте и попробуйте еще раз.')
+    else:
+        return
 
 
 async def route_list(entity: Union[types.Message, types.CallbackQuery]):
@@ -198,7 +213,7 @@ def register_handlers_routes(dp: Dispatcher):
     Register routes handlers in Dispatcher.
     """
     dp.register_message_handler(route_list, commands="routes")
-    dp.register_message_handler(route_add, commands="routeadd", state="*")
+    dp.register_message_handler(route_add, commands="routeadd")
     dp.register_message_handler(route_add_name,
                                 lambda message: message.text[0] != '/',
                                 state=CreateRoute.name)
@@ -206,7 +221,6 @@ def register_handlers_routes(dp: Dispatcher):
                                 lambda message: is_url_valid(message.text),
                                 state=CreateRoute.url)
     dp.register_message_handler(route_add_error,
-
                                 state=CreateRoute)
     dp.register_message_handler(
         route_schedule_time_set, state=CreateSchedule.time)
