@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
@@ -10,6 +12,7 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 
 
 async def set_bot_commands(bot: Bot):
+    logging.info('Configuring bot commands...')
     commands = [
         types.BotCommand('routes', 'список всех маршрутов'),
         types.BotCommand('routeadd', 'добавить маршрут'),
