@@ -23,7 +23,7 @@ async def route_add(message: types.Message):
     """
     await CreateRoute.name.set()
     await message.answer(
-        "<code>1/2</code> Пожалуйста, выберите название для нового маршрута.",
+        '<code>1/2</code> Пожалуйста, выберите название для нового маршрута.',
         reply_markup=cancel_button(),
     )
 
@@ -48,12 +48,12 @@ async def route_add_url(message: types.Message, state: FSMContext):
     await state.update_data(url=message.text)
     state_data = await state.get_data()
     current_user = User.get(User.uid == message.from_user.id)
-    Route.create(url=state_data["url"],
-                 name=state_data["name"], user=current_user)
+    Route.create(url=state_data['url'],
+                 name=state_data['name'], user=current_user)
     await message.answer(
-        f"Маршрут \"<b>{state_data['name']}</b>\" добавлен. "
-        "\n\nПосмотрите список всех маршрутов командой /routes. "
-        "\nДобавьте еще один маршрут командой /routeadd.",
+        f'Маршрут "<b>{state_data["name"]}</b>" добавлен.'
+        '\n\nПосмотрите список всех маршрутов командой /routes.'
+        '\nДобавьте еще один маршрут командой /routeadd.',
         reply_markup=types.ReplyKeyboardRemove(),
     )
     await state.finish()
@@ -79,7 +79,7 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
 
     data = User.get(User.uid == entity.from_user.id).routes
     if data.count():
-        message = f"Выберите один из ваших маршрутов."
+        message = f'Выберите один из ваших маршрутов.'
         keyboard = kb_route_list(data)
 
     if isinstance(entity, types.CallbackQuery):
@@ -113,7 +113,7 @@ async def route_show(cb: types.CallbackQuery, route_id: int, back: bool = None):
         map_center = yamp.coords
 
         # weather parser instance
-        yawp = YAWParser(map_center["lat"], map_center["lon"])
+        yawp = YAWParser(map_center['lat'], map_center['lon'])
 
         temp = yawp.temp + f"{uchar.DEGREE}C"
         fact = yawp.fact
@@ -138,21 +138,21 @@ async def process_callback_routes(cb: types.CallbackQuery):
     data = cd_routes.parse(cb.data)
     action, route_id = data['action'], data['route_id']
 
-    if action == "list":
+    if action == 'list':
         await route_list(cb)
-    elif action in ["show", "refresh"]:
+    elif action in ['show', 'refresh']:
         await route_show(cb, route_id=int(route_id))
-    elif action == "back":
+    elif action == 'back':
         await route_show(cb, route_id=int(route_id), back=True)
-    elif action == "edit":
+    elif action == 'edit':
         await route_edit(cb, route_id=int(route_id))
-    elif action == "delete":
+    elif action == 'delete':
         await route_delete(cb, route_id=int(route_id))
-    elif action == "delete_no":
+    elif action == 'delete_no':
         await route_delete_no(cb)
-    elif action == "delete_confirm":
+    elif action == 'delete_confirm':
         await route_delete_confirm(cb, route_id=int(route_id))
-    elif action == "schedule":
+    elif action == 'schedule':
         await route_edit_schedule(cb, route_id=route_id)
 
 
@@ -202,7 +202,7 @@ async def route_edit(cb: types.CallbackQuery, route_id):
 
 
 async def process_callback_route_select(cb: types.CallbackQuery):
-    route_id = cb.get("route_id")
+    route_id = cb.get('route_id')
     await route_show(cb.message, route_id)
     await cb.answer()
 
@@ -212,19 +212,28 @@ def register_handlers_routes(dp: Dispatcher):
     Register routes handlers in Dispatcher.
     """
     logging.info('Configuring routes handlers...')
-    dp.register_message_handler(route_list, commands="routes")
-    dp.register_message_handler(route_add, commands="routeadd")
-    dp.register_message_handler(route_add_name,
-                                is_name=True,
-                                state=CreateRoute.name)
-    dp.register_message_handler(route_add_url,
-                                is_url=True,
-                                state=CreateRoute.url)
-    dp.register_message_handler(route_add_error,
-                                is_name=False,
-                                is_url=False,
-                                state=CreateRoute)
     dp.register_message_handler(
-        route_schedule_time_set, state=CreateSchedule.time)
+        route_list,
+        commands='routes')
+    dp.register_message_handler(
+        route_add,
+        commands='routeadd')
+    dp.register_message_handler(
+        route_add_name,
+        is_name=True,
+        state=CreateRoute.name)
+    dp.register_message_handler(
+        route_add_url,
+        is_url=True,
+        state=CreateRoute.url)
+    dp.register_message_handler(
+        route_add_error,
+        is_name=False,
+        is_url=False,
+        state=CreateRoute)
+    dp.register_message_handler(
+        route_schedule_time_set,
+        state=CreateSchedule.time)
     dp.register_callback_query_handler(
-        process_callback_routes, cd_routes.filter())
+        process_callback_routes,
+        cd_routes.filter())
