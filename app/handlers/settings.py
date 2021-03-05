@@ -1,6 +1,10 @@
-from aiogram import types, Dispatcher
+import logging
+
+from aiogram import Dispatcher, types
 from aiogram.types.callback_query import CallbackQuery
-from app.keyboards.settings import kb_settings, kb_settings_user_location, cd_settings
+
+from app.keyboards.settings import (cd_settings, kb_settings,
+                                    kb_settings_user_location)
 
 
 async def settings_show(message: types.Message):
@@ -25,6 +29,7 @@ def register_handlers_settings(dp: Dispatcher):
     """
     Register routes handlers in Dispatcher.
     """
+    logging.info('Configuring settings handlers...')
     dp.register_message_handler(settings_show, commands="settings")
     # dp.register_message_handler(route_start, commands="routeadd", state="*")
     # dp.register_message_handler(route_named, state=CreateRoute.name)

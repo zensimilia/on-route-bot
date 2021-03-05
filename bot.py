@@ -10,7 +10,7 @@ from app.main import dp, on_startup, on_shutdown
 from app.filters import register_filters
 
 # configure logging
-logging_level = logging.DEBUG if Config.DEBUG else logging.INFO
+logging_level = logging.DEBUG if Config.DEBUG else logging.ERROR
 logging.basicConfig(level=logging_level)
 
 

@@ -1,3 +1,4 @@
+import logging
 import time
 from re import split
 from typing import Union
@@ -210,6 +211,7 @@ def register_handlers_routes(dp: Dispatcher):
     """
     Register routes handlers in Dispatcher.
     """
+    logging.info('Configuring routes handlers...')
     dp.register_message_handler(route_list, commands="routes")
     dp.register_message_handler(route_add, commands="routeadd")
     dp.register_message_handler(route_add_name,

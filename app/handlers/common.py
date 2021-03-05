@@ -1,13 +1,14 @@
+import logging
+
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
+from apscheduler.triggers.cron import CronTrigger
 
 import app.utils.uchar as uchar
-from app.models import User
 from app.main import bot
-
+from app.models import User
 from app.utils.scheduler import Scheduler
-from apscheduler.triggers.cron import CronTrigger
 
 
 async def cmd_start(message: types.Message):
@@ -54,6 +55,7 @@ async def say_hello(chat: int):
 
 
 def register_handlers_common(dp: Dispatcher):
+    logging.info('Configuring common handlers...')
     dp.register_message_handler(schedule_test, commands="test")
     dp.register_message_handler(cmd_start, commands="start")
     dp.register_message_handler(cmd_about, commands="about")
