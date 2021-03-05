@@ -1,4 +1,3 @@
-from app.filters import IsRouteVaildFilter
 import time
 from re import split
 from typing import Union
@@ -14,7 +13,7 @@ from app.models import Route, User
 from app.providers.yandex import (YAMParser, YAParseError, YARequestError,
                                   YAWParser)
 from app.states import CreateRoute, CreateSchedule
-from app.utils.misc import is_time_format, is_url_valid, something_went_wrong
+from app.utils.misc import is_time_format, is_url, something_went_wrong
 
 
 async def route_add(message: types.Message):
@@ -68,8 +67,6 @@ async def route_add_error(message: types.Message, state: FSMContext):
         await message.answer('Это не похоже на название маршрута. Попробуйте что-нибудь другое.')
     elif current_state == 'url':
         await message.answer('Наверное в ссылке допущена ошибка. Проверьте и попробуйте еще раз.')
-    else:
-        return
 
 
 async def route_list(entity: Union[types.Message, types.CallbackQuery]):
@@ -216,13 +213,14 @@ def register_handlers_routes(dp: Dispatcher):
     dp.register_message_handler(route_list, commands="routes")
     dp.register_message_handler(route_add, commands="routeadd")
     dp.register_message_handler(route_add_name,
-                                # is_route_valid=True,
-                                IsRouteVaildFilter,
+                                is_name=True,
                                 state=CreateRoute.name)
     dp.register_message_handler(route_add_url,
-                                IsRouteVaildFilter,
+                                is_url=True,
                                 state=CreateRoute.url)
     dp.register_message_handler(route_add_error,
+                                is_name=False,
+                                is_url=False,
                                 state=CreateRoute)
     dp.register_message_handler(
         route_schedule_time_set, state=CreateSchedule.time)

@@ -11,7 +11,7 @@ def is_command(text: str) -> bool:
     return True if text[0] == "/" else False
 
 
-def is_url_valid(url: str) -> bool:
+def is_url(url: str) -> bool:
     """
     Check string for valid URL.
 

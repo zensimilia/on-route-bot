@@ -1,6 +1,9 @@
-from aiogram.dispatcher.dispatcher import Dispatcher
-from .is_route_valid import IsRouteVaildFilter
 import logging
+
+from aiogram.dispatcher.dispatcher import Dispatcher
+
+from .is_name import IsName
+from .is_url import IsUrl
 
 
 def register_filters(dp: Dispatcher):
@@ -11,5 +14,7 @@ def register_filters(dp: Dispatcher):
         dp.channel_post_handlers,
         dp.edited_channel_post_handlers,
     ]
-    # dp.filters_factory.bind(IsRouteVaildFilter, event_handlers=text_messages)
-    dp.bind_filter(IsRouteVaildFilter)
+    dp.filters_factory.bind(IsName,
+                            event_handlers=text_messages)
+    dp.filters_factory.bind(IsUrl,
+                            event_handlers=text_messages)
