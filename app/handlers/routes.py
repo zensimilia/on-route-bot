@@ -1,3 +1,4 @@
+from app.filters import IsRouteVaildFilter
 import time
 from re import split
 from typing import Union
@@ -215,10 +216,11 @@ def register_handlers_routes(dp: Dispatcher):
     dp.register_message_handler(route_list, commands="routes")
     dp.register_message_handler(route_add, commands="routeadd")
     dp.register_message_handler(route_add_name,
-                                lambda message: message.text[0] != '/',
+                                # is_route_valid=True,
+                                IsRouteVaildFilter,
                                 state=CreateRoute.name)
     dp.register_message_handler(route_add_url,
-                                lambda message: is_url_valid(message.text),
+                                IsRouteVaildFilter,
                                 state=CreateRoute.url)
     dp.register_message_handler(route_add_error,
                                 state=CreateRoute)

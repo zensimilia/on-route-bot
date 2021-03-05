@@ -7,6 +7,7 @@ from app.handlers.common import register_handlers_common
 from app.handlers.routes import register_handlers_routes
 from app.handlers.settings import register_handlers_settings
 from app.main import dp, on_startup, on_shutdown
+from app.filters import register_filters
 
 # configure logging
 logging_level = logging.DEBUG if Config.DEBUG else logging.INFO
@@ -14,6 +15,9 @@ logging.basicConfig(level=logging_level)
 
 
 def main():
+    # register custom filters
+    register_filters(dp)
+
     # register Dispatcher handlers
     register_handlers_common(dp)
     register_handlers_routes(dp)
