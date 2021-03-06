@@ -26,8 +26,8 @@ async def schedule_add_time(message: types.Message, state: FSMContext):
 
 
 async def schedule_add_days(cb: types.CallbackQuery, state: FSMContext):
-    data = cd_schedule_days.parse(cb.data)
-    await state.update_data(days=data['days'])
+    cb_data = cd_schedule_days.parse(cb.data)
+    await state.update_data(days=cb_data['days'])
     state_data = await state.get_data()
     minute = state_data['time'].split(':')[-1]
     hour = state_data['time'].split(':')[0]
