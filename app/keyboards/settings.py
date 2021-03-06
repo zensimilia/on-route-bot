@@ -1,7 +1,8 @@
+from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
+                           KeyboardButton, ReplyKeyboardMarkup)
 from aiogram.utils.callback_data import CallbackData
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
-import app.utils.uchar as uchar
 
+import app.utils.uchar as uchar
 
 cd_settings = CallbackData("settings_menu", "action", "data")
 cb_cancel = cd_settings.new(action='cancel', data='void')

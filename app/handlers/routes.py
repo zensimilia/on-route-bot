@@ -8,7 +8,7 @@ from aiogram.types.callback_query import CallbackQuery
 
 import app.utils.uchar as uchar
 from app.keyboards.common import *
-from app.keyboards.routes import *
+from app.keyboards.inline_route import *
 from app.models import Route, User
 from app.providers.yandex import (YAMParser, YAParseError, YARequestError,
                                   YAWParser)

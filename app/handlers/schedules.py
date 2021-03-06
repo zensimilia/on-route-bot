@@ -1,13 +1,12 @@
-import logging
 import json
+import logging
 
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
 import app.utils.uchar as uchar
-from app.keyboards.routes import *
 from app.keyboards.inline_schedule import *
-from app.models import Route, Schedule, schedule
+from app.models import Route, Schedule
 from app.states import CreateSchedule
 
 
