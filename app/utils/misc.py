@@ -24,7 +24,7 @@ def is_url(url: str) -> bool:
     return re.match(regex, url) is not None
 
 
-def is_time_format(time: str) -> bool:
+def is_time(time: str) -> bool:
     """
     Check string for valid time HH:MM format.
 

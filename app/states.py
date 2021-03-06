@@ -15,5 +15,7 @@ class CreateSchedule(StatesGroup):
     State class for creating schedule for route.
     """
 
+    route_id: int
+
     time = State()
     days = State()

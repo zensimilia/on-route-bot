@@ -4,6 +4,7 @@ from aiogram.dispatcher.dispatcher import Dispatcher
 
 from .is_name import IsName
 from .is_url import IsUrl
+from .is_time import IsTime
 
 
 def register_filters(dp: Dispatcher):
@@ -17,4 +18,6 @@ def register_filters(dp: Dispatcher):
     dp.filters_factory.bind(IsName,
                             event_handlers=text_messages)
     dp.filters_factory.bind(IsUrl,
+                            event_handlers=text_messages)
+    dp.filters_factory.bind(IsTime,
                             event_handlers=text_messages)

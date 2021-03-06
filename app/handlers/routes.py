@@ -13,8 +13,8 @@ from app.keyboards.routes import *
 from app.models import Route, User
 from app.providers.yandex import (YAMParser, YAParseError, YARequestError,
                                   YAWParser)
-from app.states import CreateRoute, CreateSchedule
-from app.utils.misc import is_time_format, is_url, something_went_wrong
+from app.states import CreateRoute
+from app.utils.misc import something_went_wrong
 
 
 async def route_add(message: types.Message):
@@ -135,6 +135,8 @@ async def route_show(cb: types.CallbackQuery, route_id: int, back: bool = None):
 
 
 async def process_callback_routes(cb: types.CallbackQuery):
+    from .schedules import schedule_add
+
     data = cd_routes.parse(cb.data)
     action, route_id = data['action'], data['route_id']
 
@@ -153,23 +155,7 @@ async def process_callback_routes(cb: types.CallbackQuery):
     elif action == 'delete_confirm':
         await route_delete_confirm(cb, route_id=int(route_id))
     elif action == 'schedule':
-        await route_edit_schedule(cb, route_id=route_id)
-
-
-async def route_edit_schedule(cb: types.CallbackQuery, route_id: int):
-    await cb.message.answer(
-        '<code>1/2</code> Пожалуйста, введите желаемое время уведомления о маршруте в формате <code>ЧЧ:ММ</code>.')
-    await CreateSchedule.time.set()
-
-
-async def route_schedule_time_set(message: types.Message, state: FSMContext):
-    if message.text[0] == "/" and message.text != "/cancel":
-        return
-    if is_time_format(message.text):
-        await state.update_data(time=message.text)
-        await CreateSchedule.next()
-        await message.answer('<code>2/2</code> Теперь выберите дни, в которые надо получать уведомления.', reply_markup=kb_schedule_days())
-    return
+        await schedule_add(cb, route_id=route_id)
 
 
 async def route_delete_no(cb: types.CallbackQuery):
@@ -201,10 +187,10 @@ async def route_edit(cb: types.CallbackQuery, route_id):
     await cb.answer()
 
 
-async def process_callback_route_select(cb: types.CallbackQuery):
-    route_id = cb.get('route_id')
-    await route_show(cb.message, route_id)
-    await cb.answer()
+# async def process_callback_route_select(cb: types.CallbackQuery):
+#     route_id = cb.get('route_id')
+#     await route_show(cb.message, route_id)
+#     await cb.answer()
 
 
 def register_handlers_routes(dp: Dispatcher):
@@ -231,9 +217,6 @@ def register_handlers_routes(dp: Dispatcher):
         is_name=False,
         is_url=False,
         state=CreateRoute)
-    dp.register_message_handler(
-        route_schedule_time_set,
-        state=CreateSchedule.time)
     dp.register_callback_query_handler(
         process_callback_routes,
         cd_routes.filter())
