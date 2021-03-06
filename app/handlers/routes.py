@@ -1,6 +1,5 @@
 import logging
 import time
-from re import split
 from typing import Union
 
 from aiogram import Dispatcher, types
@@ -63,7 +62,7 @@ async def route_add_error(message: types.Message, state: FSMContext):
     """
     Handle errors in create route process.
     """
-    current_state = split(':', await state.get_state())[-1]
+    current_state = str(await state.get_state()).split(':')[-1]
     if current_state == 'name':
         await message.answer('Это не похоже на название маршрута. Попробуйте что-нибудь другое.')
     elif current_state == 'url':
@@ -187,12 +186,6 @@ async def route_edit(cb: types.CallbackQuery, route_id):
     await cb.answer()
 
 
-# async def process_callback_route_select(cb: types.CallbackQuery):
-#     route_id = cb.get('route_id')
-#     await route_show(cb.message, route_id)
-#     await cb.answer()
-
-
 def register_handlers_routes(dp: Dispatcher):
     """
     Register routes handlers in Dispatcher.
@@ -214,8 +207,11 @@ def register_handlers_routes(dp: Dispatcher):
         state=CreateRoute.url)
     dp.register_message_handler(
         route_add_error,
-        is_name=False,
         is_url=False,
+        state=CreateRoute)
+    dp.register_message_handler(
+        route_add_error,
+        is_name=False,
         state=CreateRoute)
     dp.register_callback_query_handler(
         process_callback_routes,

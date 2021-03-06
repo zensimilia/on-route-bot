@@ -45,8 +45,11 @@ async def schedule_add_days(cb: types.CallbackQuery, state: FSMContext):
     await cb.answer()
 
 
-async def process_callback_schedule():
-    pass
+async def schedule_add_error(message: types.Message):
+    """
+    Handle errors in create shcedule process.
+    """
+    await message.answer('Не понимаю этот формат. Попробуйте еще раз или введите команду отмены /cancel.')
 
 
 def register_handlers_schedules(dp: Dispatcher):
@@ -62,3 +65,8 @@ def register_handlers_schedules(dp: Dispatcher):
         schedule_add_days,
         cd_schedule_days.filter(),
         state=CreateSchedule.days)
+    dp.register_message_handler(
+        schedule_add_error,
+        is_time=False,
+        state=CreateSchedule
+    )
