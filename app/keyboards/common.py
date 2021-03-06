@@ -5,9 +5,12 @@ def cancel_button() -> ReplyKeyboardMarkup:
     """
     Returns markup of cancel button.
     """
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
+        [
+            [
+                KeyboardButton('Отмена')
+            ],
+        ],
         resize_keyboard=True,
-        one_time_keyboard=True)
-    cancel_button = KeyboardButton('Отмена')
-    keyboard.add(cancel_button)
-    return keyboard
+        one_time_keyboard=True
+    )

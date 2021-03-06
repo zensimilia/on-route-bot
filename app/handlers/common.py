@@ -1,9 +1,14 @@
+import logging
+
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
+from apscheduler.triggers.cron import CronTrigger
 
 import app.utils.uchar as uchar
+from app.main import bot
 from app.models import User
+from app.utils.scheduler import Scheduler
 
 
 async def cmd_start(message: types.Message):
@@ -38,20 +43,20 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
     await message.answer(f"Команда отменена {uchar.OK_HAND}", reply_markup=types.ReplyKeyboardRemove())
 
 
-async def something_went_wrong(messsage: types.Message, error: str = None):
-    """
-    Show error message when exception is raised.
+async def schedule_test(message: types.Message):
+    Scheduler.add_job(say_hello, trigger=CronTrigger(
+        minute='*/1'), id="job", kwargs={'chat': message.chat.id})
+    await message.answer('Test is run...')
 
-    :param obj message: Message object.
-    :param obj error: Error object with `__str__` method.
-    """
-    if error is None:
-        error = 'Что-то пошло не так!'
-    text = f'<b>{error}</b> \nПопробуйте позже или обратитесь к автору бота (ссылка в профиле).'
-    await messsage.answer(text)
+
+async def say_hello(chat: int):
+    import datetime
+    await bot.send_message(chat_id=chat, text=f"Hello! Current time is: {datetime.datetime.now()}")
 
 
 def register_handlers_common(dp: Dispatcher):
+    logging.info('Configuring common handlers...')
+    dp.register_message_handler(schedule_test, commands="test")
     dp.register_message_handler(cmd_start, commands="start")
     dp.register_message_handler(cmd_about, commands="about")
     dp.register_message_handler(cmd_cancel, commands="cancel", state="*")
