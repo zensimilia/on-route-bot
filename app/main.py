@@ -2,6 +2,7 @@ import logging
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.types.bot_command import BotCommand
 
 from app.config import Config
 from app.models import *
@@ -16,7 +17,9 @@ async def set_bot_commands(bot: Bot):
     commands = [
         types.BotCommand('routes', 'список всех маршрутов'),
         types.BotCommand('routeadd', 'добавить маршрут'),
+        types.BotCommand('help', 'помощь'),
         types.BotCommand('about', 'информация о боте'),
+        types.BotCommand('settings', 'настройки'),
         types.BotCommand('cancel', 'отменить текущую команду')
     ]
     await bot.set_my_commands(commands)
