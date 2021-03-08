@@ -1,5 +1,4 @@
-from app.models import route
-from typing import Iterable, List
+from typing import Iterable
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
@@ -11,9 +10,9 @@ cd_routes = CallbackData("routes_menu", "action", "route_id")
 
 def kb_route_buttons(route_id: int, is_active: bool) -> InlineKeyboardMarkup:
     """
-    Display keyboard for single route. Links to map, weather and edit route keyboard.
+    Display keyboard for selected route.
 
-    :param int route_id: Active route id.
+    :param int route_id: Selected route id.
     :param bool is_active: Is route notifications active.
     """
     status = uchar.BELL if not is_active else uchar.BELL_STROKE
@@ -48,23 +47,31 @@ def kb_route_buttons(route_id: int, is_active: bool) -> InlineKeyboardMarkup:
 
 
 def kb_route_delete_confirm_buttons(route_id: int) -> InlineKeyboardMarkup:
-    cb_yes = cd_routes.new(action="delete_confirm", route_id=route_id)
-    cb_back = cd_routes.new(action="delete_no", route_id=route_id)
+    """
+    Return keyboard with delete route confirmation buttons YES/NO.
+
+    :param int route_id: Selected route id.
+    """
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
                     f'{uchar.CHECK_MARK} Да',
-                    callback_data=cb_yes),
+                    callback_data=cd_routes.new(action="delete_confirm", route_id=route_id)),
                 InlineKeyboardButton(
                     f'{uchar.CROSS_MARK} Нет',
-                    callback_data=cb_back)
+                    callback_data=cd_routes.new(action="delete_no", route_id=route_id))
             ]
         ]
     )
 
 
 def kb_route_single(route_id: int) -> InlineKeyboardMarkup:
+    """
+    Return keyboard for single route with back buttons.
+
+    :param int route_id: Selected route id.
+    """
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -88,7 +95,7 @@ def kb_route_list(routes: Iterable) -> InlineKeyboardMarkup:
     kb = list()
 
     for route in routes:
-        status = uchar.CIRCLE_GREEN if route.is_active else uchar.CIRCLE_RED
+        status = uchar.BELL if route.is_active else uchar.BELL_STROKE
         cb_data = cd_routes.new(action="select", route_id=route.id)
         kb.append([
             InlineKeyboardButton(

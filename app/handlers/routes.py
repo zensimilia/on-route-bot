@@ -82,6 +82,7 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
 
     if isinstance(entity, types.CallbackQuery):
         await entity.message.edit_text(message, reply_markup=keyboard)
+        await entity.answer()
         return
 
     await entity.answer(
@@ -109,6 +110,7 @@ async def route_select(cb: types.CallbackQuery, callback_data: dict):
             f'\nЧто вы хотите сделать с этим маршрутом?'),
         reply_markup=kb_route_buttons(route_id, is_active),
     )
+    await cb.answer()
 
 
 async def route_show(cb: types.CallbackQuery, callback_data: dict):
@@ -145,24 +147,10 @@ async def route_show(cb: types.CallbackQuery, callback_data: dict):
                 f'За окном <b>{temp}</b> {fact} <a href="{yawp.url}">(подробнее)</a>.'),
             reply_markup=kb_route_single(route_id)
         )
+        await cb.answer()
 
     except (YAParseError, YARequestError) as e:
         await something_went_wrong(cb.message, e)
-
-
-async def process_callback_routes(cb: types.CallbackQuery, callback_data: dict):
-    from .schedules import schedule_add
-
-    action, route_id = callback_data['action'], callback_data['route_id']
-
-    # if action == 'delete':
-    # await route_delete(cb)
-    # elif action == 'delete_no':
-    # await route_delete_no(cb)
-    # elif action == 'delete_confirm':
-    # await route_delete_confirm(cb, route_id=int(route_id))
-    # elif action == 'schedule':
-    # await schedule_add(cb, route_id=route_id)
 
 
 async def route_delete_confirm(cb: CallbackQuery, callback_data: dict):

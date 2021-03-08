@@ -58,6 +58,3 @@ def register_handlers_routes(dp: Dispatcher):
         route_delete_confirm,
         cd_routes.filter(action='delete_confirm')
     )
-    # dp.register_callback_query_handler(
-    # process_callback_routes,
-    # cd_routes.filter())
