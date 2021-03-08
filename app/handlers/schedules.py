@@ -1,7 +1,6 @@
 import json
-import logging
 
-from aiogram import Dispatcher, types
+from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 import app.utils.uchar as uchar
@@ -10,10 +9,10 @@ from app.models import Route, Schedule
 from app.states import CreateSchedule
 
 
-async def schedule_add(cb: types.CallbackQuery, route_id: int):
+async def schedule_add(cb: types.CallbackQuery, callback_data: dict):
     await cb.message.answer(
         '<code>1/2</code> Пожалуйста, введите желаемое время уведомления о маршруте в формате <code>ЧЧ:ММ</code>.')
-    CreateSchedule.route_id = route_id
+    CreateSchedule.route_id = callback_data['route_id']
     await CreateSchedule.time.set()
     await cb.answer()
 
@@ -49,23 +48,3 @@ async def schedule_add_error(message: types.Message):
     Handle errors in create shcedule process.
     """
     await message.answer('Не понимаю этот формат. Попробуйте еще раз или введите команду отмены /cancel.')
-
-
-def register_handlers_schedules(dp: Dispatcher):
-    """
-    Register schedule handlers in Dispatcher.
-    """
-    logging.info('Configuring schedule handlers...')
-    dp.register_message_handler(
-        schedule_add_time,
-        is_time=True,
-        state=CreateSchedule.time)
-    dp.register_callback_query_handler(
-        schedule_add_days,
-        cd_schedule_days.filter(),
-        state=CreateSchedule.days)
-    dp.register_message_handler(
-        schedule_add_error,
-        is_time=False,
-        state=CreateSchedule
-    )

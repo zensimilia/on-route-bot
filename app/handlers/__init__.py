@@ -1,5 +1,6 @@
 import logging
 from .routes import *
+from .schedules import *
 from aiogram.dispatcher import Dispatcher
 
 
@@ -57,4 +58,24 @@ def register_handlers_routes(dp: Dispatcher):
     dp.register_callback_query_handler(
         route_delete_confirm,
         cd_routes.filter(action='delete_confirm')
+    )
+
+
+def register_handlers_schedules(dp: Dispatcher):
+    """
+    Register schedule handlers in Dispatcher.
+    """
+    logging.info('Configuring schedule handlers...')
+    dp.register_message_handler(
+        schedule_add_time,
+        is_time=True,
+        state=CreateSchedule.time)
+    dp.register_callback_query_handler(
+        schedule_add_days,
+        cd_schedule_days.filter(),
+        state=CreateSchedule.days)
+    dp.register_message_handler(
+        schedule_add_error,
+        is_time=False,
+        state=CreateSchedule
     )

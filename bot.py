@@ -4,8 +4,7 @@ from aiogram import executor
 
 from app.config import Config
 from app.handlers.common import register_handlers_common
-from app.handlers import register_handlers_routes
-from app.handlers.schedules import register_handlers_schedules
+from app.handlers import register_handlers_routes, register_handlers_schedules
 from app.handlers.settings import register_handlers_settings
 from app.main import dp, on_startup, on_shutdown
 from app.filters import register_filters

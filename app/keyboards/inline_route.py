@@ -56,10 +56,10 @@ def kb_route_delete_confirm_buttons(route_id: int) -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    f'{uchar.CHECK_MARK} Да',
+                    'ДА',
                     callback_data=cd_routes.new(action="delete_confirm", route_id=route_id)),
                 InlineKeyboardButton(
-                    f'{uchar.CROSS_MARK} Нет',
+                    'НЕТ',
                     callback_data=cd_routes.new(action="delete_no", route_id=route_id))
             ]
         ]
