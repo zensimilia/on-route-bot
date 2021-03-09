@@ -32,7 +32,6 @@ BOT_TOKEN={bot token}
 DB_FILE=store/{sqlite database filename}
 ENV={development | production}
 DEBUG={True | False}
-GEONAMES_USER={username}
 ```
 
 ### Required python packages

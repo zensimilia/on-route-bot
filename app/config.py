@@ -25,7 +25,6 @@ class AppConfig:
     ENV: str = 'production'
     BOT_TOKEN: str
     DB_FILE: str
-    GEONAMES_USER: str
 
     """
     Map environment variables to class fields according to these rules:
