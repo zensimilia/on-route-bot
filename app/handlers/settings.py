@@ -24,7 +24,7 @@ async def settings_list(entity: Union[types.Message, types.CallbackQuery]):
 
 async def settings_tz(cb: CallbackQuery, callback_data: dict):
     user = User.get(User.uid == cb.from_user.id)
-    text = f'Ваш часовой пояс <b>{user.timezone}</b>.' if user.timezone else 'Укажите ваш часовой пояс для получения уведомлений в нужное время.'
+    text = f'Ваш часовой пояс <b>{user.timezone}</b>.' if user.timezone else 'Укажите ваш часовой пояс для получения уведомлений в корректное время.'
     await cb.message.edit_text(text, reply_markup=kb_settings_tz())
     await cb.answer()
 
