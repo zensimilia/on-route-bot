@@ -1,6 +1,7 @@
 import logging
 from .routes import *
 from .schedules import *
+from .settings import *
 from aiogram.dispatcher import Dispatcher
 
 
@@ -79,3 +80,29 @@ def register_handlers_schedules(dp: Dispatcher):
         is_time=False,
         state=CreateSchedule
     )
+
+
+def register_handlers_settings(dp: Dispatcher):
+    """
+    Register routes handlers in Dispatcher.
+    """
+    logging.info('Configuring settings handlers...')
+    dp.register_message_handler(settings_list, commands="settings")
+    dp.register_callback_query_handler(
+        settings_list, cd_settings.filter(action='list')
+    )
+    dp.register_callback_query_handler(
+        settings_tz, cd_settings.filter(action='tz')
+    )
+    dp.register_callback_query_handler(
+        settings_tz_change, cd_settings.filter(action='tz-change')
+    )
+    dp.register_message_handler(
+        settings_tz_set,
+        Text(
+            startswith='UTC',
+            ignore_case=True
+        ),
+        state=SetTimezone
+    )
+    dp.register_message_handler(settings_tz_error, state=SetTimezone)

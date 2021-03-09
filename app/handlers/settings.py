@@ -53,29 +53,3 @@ async def settings_tz_set(message: types.Message, state: FSMContext):
 
 async def settings_tz_error(message: types.Message, state: FSMContext):
     await message.answer('Это не похоже на формат <a href="https://ru.wikipedia.org/wiki/%D0%92%D1%81%D0%B5%D0%BC%D0%B8%D1%80%D0%BD%D0%BE%D0%B5_%D0%BA%D0%BE%D0%BE%D1%80%D0%B4%D0%B8%D0%BD%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%BD%D0%BE%D0%B5_%D0%B2%D1%80%D0%B5%D0%BC%D1%8F">всемирного координированного времени</a>.', disable_web_page_preview=True)
-
-
-def register_handlers_settings(dp: Dispatcher):
-    """
-    Register routes handlers in Dispatcher.
-    """
-    logging.info('Configuring settings handlers...')
-    dp.register_message_handler(settings_list, commands="settings")
-    dp.register_callback_query_handler(
-        settings_list, cd_settings.filter(action='list')
-    )
-    dp.register_callback_query_handler(
-        settings_tz, cd_settings.filter(action='tz')
-    )
-    dp.register_callback_query_handler(
-        settings_tz_change, cd_settings.filter(action='tz-change')
-    )
-    dp.register_message_handler(
-        settings_tz_set,
-        Text(
-            startswith='UTC',
-            ignore_case=True
-        ),
-        state=SetTimezone
-    )
-    dp.register_message_handler(settings_tz_error, state=SetTimezone)
