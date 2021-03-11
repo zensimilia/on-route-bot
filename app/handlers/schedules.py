@@ -9,6 +9,17 @@ from app.models import Route, Schedule
 from app.states import CreateSchedule
 
 
+async def schedule_list(cb: types.CallbackQuery, callback_data: dict):
+    """
+    List all schedules for specific route.
+    """
+    route_id = callback_data['route_id']
+    route = Route.get_by_id(route_id)
+    schedules = Schedule.select().where(Schedule.route == route_id)
+    await cb.message.edit_text(f'Настройка уведомлений для маршрута <b>{route.name}</b>.', reply_markup=kb_schedule_list(schedules, route_id))
+    await cb.answer()
+
+
 async def schedule_add(cb: types.CallbackQuery, callback_data: dict):
     await cb.message.answer(
         '<code>1/2</code> Пожалуйста, введите желаемое время уведомления о маршруте в формате <code>ЧЧ:ММ</code>.')

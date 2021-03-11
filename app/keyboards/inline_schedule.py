@@ -1,7 +1,34 @@
+from typing import Union
 from aiogram.utils.callback_data import CallbackData
 from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 
+from app.utils import uchar
+from app.keyboards.inline_route import cd_routes
+
+cd_schedules = CallbackData('schedules_menu', 'action', 'schedule_id')
 cd_schedule_days = CallbackData("shedule", "days")
+
+
+def kb_schedule_list(schedules: Union[dict, None], route_id: int) -> InlineKeyboardMarkup:
+    buttons = list()
+    print(schedules)
+    if schedules.count():
+        for schedule in schedules:
+            buttons.append([
+                InlineKeyboardButton(
+                    f'{schedule.id} {schedule.is_active}',
+                    callback_data=cd_schedules.new('select', schedule.id)
+                )
+            ])
+    buttons.append(
+        [
+            InlineKeyboardButton('Добавить расписание',
+                                 callback_data=cd_schedules.new('add', False))
+        ]
+    )
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
 
 
 def kb_schedule_days() -> InlineKeyboardMarkup:

@@ -80,6 +80,10 @@ def register_handlers_schedules(dp: Dispatcher):
         is_time=False,
         state=CreateSchedule
     )
+    dp.register_callback_query_handler(
+        schedule_list,
+        cd_routes.filter(action='schedule')
+    )
 
 
 def register_handlers_settings(dp: Dispatcher):
