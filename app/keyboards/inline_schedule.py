@@ -4,10 +4,10 @@ from typing import Union
 from aiogram.types.inline_keyboard import (InlineKeyboardButton,
                                            InlineKeyboardMarkup)
 from aiogram.utils.callback_data import CallbackData
-from cron_descriptor import Options, get_description
+# from cron_descriptor import Options, get_description
 
 from app.keyboards.inline_route import cd_routes
-from app.utils import uchar
+from app.utils import uchar, cronity
 
 cd_schedules = CallbackData('schedules_menu', 'action', 'schedule_id')
 cd_schedule_days = CallbackData("shedule", "days")
@@ -15,17 +15,13 @@ cd_schedule_days = CallbackData("shedule", "days")
 
 def kb_schedule_list(schedules: Union[dict, None], route_id: int) -> InlineKeyboardMarkup:
     buttons = list()
-    options = Options()
-    options.locale_code = 'ru_RU'
-    options.use_24hour_time_format = True
     if schedules.count():
         for schedule in schedules:
-            cron_object = json.loads(schedule.schedule)
-            cron_string = f"{cron_object['minute']} {cron_object['hour']} * * {cron_object['day_of_week']}"
-            description = get_description(cron_string, options)
+            cron = json.loads(schedule.schedule)
+            readable = cronity.humanize(cron)
             buttons.append([
                 InlineKeyboardButton(
-                    f'{description}',
+                    f'{readable}',
                     callback_data=cd_schedules.new('select', schedule.id)
                 ),
             ])
