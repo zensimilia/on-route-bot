@@ -1,9 +1,13 @@
+import json
 from typing import Union
-from aiogram.utils.callback_data import CallbackData
-from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 
-from app.utils import uchar
+from aiogram.types.inline_keyboard import (InlineKeyboardButton,
+                                           InlineKeyboardMarkup)
+from aiogram.utils.callback_data import CallbackData
+from cron_descriptor import Options, get_description
+
 from app.keyboards.inline_route import cd_routes
+from app.utils import uchar
 
 cd_schedules = CallbackData('schedules_menu', 'action', 'schedule_id')
 cd_schedule_days = CallbackData("shedule", "days")
@@ -11,19 +15,29 @@ cd_schedule_days = CallbackData("shedule", "days")
 
 def kb_schedule_list(schedules: Union[dict, None], route_id: int) -> InlineKeyboardMarkup:
     buttons = list()
-    print(schedules)
+    options = Options()
+    options.locale_code = 'ru_RU'
+    options.use_24hour_time_format = True
     if schedules.count():
         for schedule in schedules:
+            cron_object = json.loads(schedule.schedule)
+            cron_string = f"{cron_object['minute']} {cron_object['hour']} * * {cron_object['day_of_week']}"
+            description = get_description(cron_string, options)
             buttons.append([
                 InlineKeyboardButton(
-                    f'{schedule.id} {schedule.is_active}',
+                    f'{description}',
                     callback_data=cd_schedules.new('select', schedule.id)
-                )
+                ),
             ])
     buttons.append(
         [
-            InlineKeyboardButton('Добавить расписание',
-                                 callback_data=cd_schedules.new('add', False))
+            InlineKeyboardButton(
+                f'{uchar.BACK_ARROW} Назад',
+                callback_data=cd_routes.new(action='select', route_id=route_id)),
+            InlineKeyboardButton(
+                f'{uchar.NEW} Добавить',
+                callback_data=cd_schedules.new('add', False)),
+
         ]
     )
     return InlineKeyboardMarkup(
@@ -32,34 +46,36 @@ def kb_schedule_list(schedules: Union[dict, None], route_id: int) -> InlineKeybo
 
 
 def kb_schedule_days() -> InlineKeyboardMarkup:
-    cb_week = cd_schedule_days.new(days="0-6")
-    cb_work = cd_schedule_days.new(days="0-4")
-    cb_weekend = cd_schedule_days.new(days="5-6")
-
+    """
+    Display keyboard with days of week choice.
+    """
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton('Ежедневно', callback_data=cb_week)
-            ],
-            [
-                InlineKeyboardButton('Рабочие', callback_data=cb_work),
-                InlineKeyboardButton('Выходные', callback_data=cb_weekend)
+                InlineKeyboardButton(
+                    'Ежедневно', callback_data=cd_schedule_days.new(days="*"))
             ],
             [
                 InlineKeyboardButton(
-                    'Пн', callback_data=cd_schedule_days.new(days=(0))),
+                    'Рабочие', callback_data=cd_schedule_days.new(days="1-5")),
                 InlineKeyboardButton(
-                    'Вт', callback_data=cd_schedule_days.new(days=(1))),
+                    'Выходные', callback_data=cd_schedule_days.new(days="6-0"))
+            ],
+            [
                 InlineKeyboardButton(
-                    'Ср', callback_data=cd_schedule_days.new(days=(2))),
+                    'Пн', callback_data=cd_schedule_days.new(days=(1))),
                 InlineKeyboardButton(
-                    'Чт', callback_data=cd_schedule_days.new(days=(3))),
+                    'Вт', callback_data=cd_schedule_days.new(days=(2))),
                 InlineKeyboardButton(
-                    'Пт', callback_data=cd_schedule_days.new(days=(4))),
+                    'Ср', callback_data=cd_schedule_days.new(days=(3))),
                 InlineKeyboardButton(
-                    'Сб', callback_data=cd_schedule_days.new(days=(5))),
+                    'Чт', callback_data=cd_schedule_days.new(days=(4))),
                 InlineKeyboardButton(
-                    'Вс', callback_data=cd_schedule_days.new(days=(6)))
+                    'Пт', callback_data=cd_schedule_days.new(days=(5))),
+                InlineKeyboardButton(
+                    'Сб', callback_data=cd_schedule_days.new(days=(6))),
+                InlineKeyboardButton(
+                    'Вс', callback_data=cd_schedule_days.new(days=(0)))
             ]
         ]
     )

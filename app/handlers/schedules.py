@@ -15,7 +15,7 @@ async def schedule_list(cb: types.CallbackQuery, callback_data: dict):
     """
     route_id = callback_data['route_id']
     route = Route.get_by_id(route_id)
-    schedules = Schedule.select().where(Schedule.route == route_id)
+    schedules = route.schedules
     await cb.message.edit_text(f'Настройка уведомлений для маршрута <b>{route.name}</b>.', reply_markup=kb_schedule_list(schedules, route_id))
     await cb.answer()
 
