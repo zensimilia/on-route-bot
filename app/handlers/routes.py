@@ -102,7 +102,7 @@ async def route_select(cb: types.CallbackQuery, callback_data: dict):
     if callback_data['action'] == 'toggle':
         is_active = not is_active
         text = 'Уведомления включены' if is_active else 'Уведомления отключены'
-        route.update(is_active=is_active).execute()
+        Route.update(is_active=is_active).where(Route.id == route_id).execute()
         await cb.answer(text)
 
     await cb.message.edit_text(
