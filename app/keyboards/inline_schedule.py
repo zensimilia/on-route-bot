@@ -4,7 +4,6 @@ from typing import Union
 from aiogram.types.inline_keyboard import (InlineKeyboardButton,
                                            InlineKeyboardMarkup)
 from aiogram.utils.callback_data import CallbackData
-# from cron_descriptor import Options, get_description
 
 from app.keyboards.inline_route import cd_routes
 from app.utils import uchar, cronity
