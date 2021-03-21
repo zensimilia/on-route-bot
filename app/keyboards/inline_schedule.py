@@ -8,8 +8,10 @@ from aiogram.utils.callback_data import CallbackData
 from app.keyboards.inline_route import cd_routes
 from app.utils import uchar, cronity
 
-cd_schedules = CallbackData('schedules_menu', 'action', 'schedule_id')
-cd_schedule_days = CallbackData("shedule", "days")
+cd_schedules = CallbackData(
+    'schedules_menu', 'action', 'schedule_id', 'route_id')
+cd_schedule_days = CallbackData('schedule_days', 'days')
+cd_schedule_times = CallbackData('schedule_time', 'time')
 
 
 def kb_schedule_list(schedules: Union[dict, None], route_id: int) -> InlineKeyboardMarkup:
@@ -21,7 +23,8 @@ def kb_schedule_list(schedules: Union[dict, None], route_id: int) -> InlineKeybo
             buttons.append([
                 InlineKeyboardButton(
                     f'{readable}',
-                    callback_data=cd_schedules.new('select', schedule.id)
+                    callback_data=cd_schedules.new(
+                        'select', schedule.id, False)
                 ),
             ])
     buttons.append(
@@ -31,12 +34,32 @@ def kb_schedule_list(schedules: Union[dict, None], route_id: int) -> InlineKeybo
                 callback_data=cd_routes.new(action='select', route_id=route_id)),
             InlineKeyboardButton(
                 f'{uchar.NEW} Добавить',
-                callback_data=cd_schedules.new('add', False)),
+                callback_data=cd_schedules.new('add', False, route_id=route_id)),
 
         ]
     )
     return InlineKeyboardMarkup(
         inline_keyboard=buttons
+    )
+
+
+def kb_schedule_times() -> InlineKeyboardMarkup:
+    """
+    Display keyboard with list of times.
+    """
+    times = list()
+    group = list()
+    for i in range(0, 24):
+        group.append(
+            InlineKeyboardButton(
+                f'{i}:00', callback_data=cd_schedule_times.new(time=f'{i}.00')
+            )
+        )
+        if len(group) == 6:
+            times.append(group.copy())
+            group.clear()
+    return InlineKeyboardMarkup(
+        inline_keyboard=times
     )
 
 

@@ -84,6 +84,10 @@ def register_handlers_schedules(dp: Dispatcher):
         schedule_list,
         cd_routes.filter(action='schedule')
     )
+    dp.register_callback_query_handler(
+        schedule_add,
+        cd_schedules.filter(action='add')
+    )
 
 
 def register_handlers_settings(dp: Dispatcher):

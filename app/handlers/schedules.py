@@ -21,17 +21,20 @@ async def schedule_list(cb: types.CallbackQuery, callback_data: dict):
 
 
 async def schedule_add(cb: types.CallbackQuery, callback_data: dict):
-    await cb.message.answer(
-        '<code>1/2</code> Пожалуйста, введите желаемое время уведомления о маршруте в формате <code>ЧЧ:ММ</code>.')
+    await cb.message.edit_text(
+        '<code>1/2</code> Пожалуйста, выберите желаемое время уведомления о маршруте.',
+        reply_markup=kb_schedule_times()
+    )
     CreateSchedule.route_id = callback_data['route_id']
     await CreateSchedule.time.set()
     await cb.answer()
 
 
-async def schedule_add_time(message: types.Message, state: FSMContext):
-    await state.update_data(time=message.text)
+async def schedule_add_time(cb: types.CallbackQuery, callback_data: dict, state: FSMContext):
+    time = callback_data['time']
+    await state.update_data(time=time)
     await CreateSchedule.next()
-    await message.answer('<code>2/2</code> Теперь выберите дни, в которые надо получать уведомления.', reply_markup=kb_schedule_days())
+    await cb.message.edit_text('<code>2/2</code> Теперь выберите дни, в которые надо получать уведомления.', reply_markup=kb_schedule_days())
 
 
 async def schedule_add_days(cb: types.CallbackQuery, state: FSMContext):
