@@ -1,8 +1,7 @@
-import logging
 import time
 from typing import Union
 
-from aiogram import Dispatcher, types
+from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types.callback_query import CallbackQuery
 
@@ -78,12 +77,13 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
 
     data = User.get(User.uid == entity.from_user.id).routes
     if data.count():
-        message = f'Выберите один из ваших маршрутов.'
+        message = f'Выберите маршрут из списка ниже:'
         keyboard = kb_route_list(data)
 
     if isinstance(entity, types.CallbackQuery):
-        entity = entity.message
-        await entity.delete()
+        await entity.message.edit_text(message, reply_markup=keyboard)
+        await entity.answer()
+        return
 
     await entity.answer(
         message,
@@ -91,23 +91,43 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
     )
 
 
-async def route_show(cb: types.CallbackQuery, route_id: int, back: bool = None):
+async def route_select(cb: types.CallbackQuery, callback_data: dict):
+    """
+    Display selected route with keyboard.
+    """
+    route_id = callback_data['route_id']
+    route = Route.get_by_id(route_id)
+    is_active = route.is_active
+
+    if callback_data['action'] == 'toggle':
+        is_active = not is_active
+        text = 'Уведомления включены' if is_active else 'Уведомления отключены'
+        Route.update(is_active=is_active).where(Route.id == route_id).execute()
+        await cb.answer(text)
+
+    await cb.message.edit_text(
+        str(f'Вы выбрали <b>{route.name}</b>.'
+            f'\nЧто вы хотите сделать с этим маршрутом?'),
+        reply_markup=kb_route_buttons(route_id, is_active),
+    )
+    await cb.answer()
+
+
+async def route_show(cb: types.CallbackQuery, callback_data: dict):
     """
     Show specific route information and action buttons.
 
     :param obj message: Message object.
     :param int route_id: Route id.
     """
-    if back:
-        await cb.message.edit_reply_markup(kb_route_buttons(route_id))
-        return
-
     timestamp = time.ctime()
 
+    route_id = callback_data['route_id']
     # get user route from database
-    route = Route.get(Route.id == route_id)
+    route = Route.get_by_id(route_id)
 
     try:
+        from aiogram.utils.markdown import hide_link
         yamp = YAMParser(route.url)  # map parser instance
         map_center = yamp.coords
 
@@ -119,100 +139,38 @@ async def route_show(cb: types.CallbackQuery, route_id: int, back: bool = None):
         time_left = yamp.time
 
         # add timestamp to avoid image caching
-        map_url = f"{yamp.map}&{timestamp}"
+        map_url = hide_link(f"{yamp.map}&{timestamp}")
 
-        await cb.message.answer_photo(
-            map_url,
-            caption=str(f'Маршрут <b>"{route.name}"</b> займет <b>{time_left}</b> <a href="{yamp.url}">(открыть)</a>. '
-                        f'За окном <b>{temp}</b> {fact} <a href="{yawp.url}">(подробнее)</a>.'),
-            reply_markup=kb_route_buttons(route_id),
+        await cb.message.edit_text(
+            str(f'{map_url}'
+                f'Маршрут <b>{route.name}</b> займет <b>{time_left}</b> <a href="{yamp.url}">(открыть)</a>. '
+                f'За окном <b>{temp}</b> {fact} <a href="{yawp.url}">(подробнее)</a>.'),
+            reply_markup=kb_route_single(route_id)
         )
-        await cb.message.delete()
+        await cb.answer()
 
     except (YAParseError, YARequestError) as e:
         await something_went_wrong(cb.message, e)
 
 
-async def process_callback_routes(cb: types.CallbackQuery):
-    from .schedules import schedule_add
-
-    data = cd_routes.parse(cb.data)
-    action, route_id = data['action'], data['route_id']
-
-    if action == 'list':
-        await route_list(cb)
-    elif action in ['show', 'refresh']:
-        await route_show(cb, route_id=int(route_id))
-    elif action == 'back':
-        await route_show(cb, route_id=int(route_id), back=True)
-    elif action == 'edit':
-        await route_edit(cb, route_id=int(route_id))
-    elif action == 'delete':
-        await route_delete(cb, route_id=int(route_id))
-    elif action == 'delete_no':
-        await route_delete_no(cb)
-    elif action == 'delete_confirm':
-        await route_delete_confirm(cb, route_id=int(route_id))
-    elif action == 'schedule':
-        await schedule_add(cb, route_id=route_id)
-
-
-async def route_delete_no(cb: types.CallbackQuery):
-    await cb.message.delete()
-
-
-async def route_delete_confirm(cb: CallbackQuery, route_id: int):
+async def route_delete_confirm(cb: CallbackQuery, callback_data: dict):
     """
     Delete route from DB and send message.
 
     :param int route_id: Route id.
     """
-    Route.delete_by_id(route_id)
-    await cb.message.delete()
-    await cb.message.answer('Маршрут успешно удален. Посмотрите список всех маршрутов командой /routes.')
-    pass
+    route_id = callback_data['route_id']
 
+    route = Route.get_by_id(route_id)
+    route.delete_by_id(route_id)
 
-async def route_delete(cb: types.CallbackQuery, route_id):
-    route_name = Route.get_by_id(route_id).name
-    await cb.message.answer(
-        f'Вы уверены, что хотите удалить маршрут <b>{route_name}</b>?', reply_markup=kb_route_delete_confirm_buttons(route_id))
+    await cb.message.edit_text(f'Маршрут <b>{route.name}</b> успешно удален {uchar.OK_HAND} \n\nПосмотрите список всех маршрутов командой /routes. \nИли создайте новый маршрут командой /routeadd.')
     await cb.answer()
 
 
-async def route_edit(cb: types.CallbackQuery, route_id):
-    keyboard = kb_route_edit_buttons(route_id)
-    await cb.message.edit_reply_markup(keyboard)
+async def route_delete(cb: types.CallbackQuery, callback_data: dict):
+    route_id = callback_data['route_id']
+    route = Route.get_by_id(route_id)
+    await cb.message.edit_text(
+        f'Вы уверены, что хотите удалить маршрут <b>{route.name}</b>?', reply_markup=kb_route_delete_confirm_buttons(route_id))
     await cb.answer()
-
-
-def register_handlers_routes(dp: Dispatcher):
-    """
-    Register routes handlers in Dispatcher.
-    """
-    logging.info('Configuring routes handlers...')
-    dp.register_message_handler(
-        route_list,
-        commands='routes')
-    dp.register_message_handler(
-        route_add,
-        commands='routeadd')
-    dp.register_message_handler(
-        route_add_name,
-        is_name=True,
-        state=CreateRoute.name)
-    dp.register_message_handler(
-        route_add_url,
-        is_url=True,
-        state=CreateRoute.url)
-    dp.register_message_handler(
-        route_add_error,
-        is_url=False,
-        state=CreateRoute)
-    dp.register_message_handler(
-        route_add_error,
-        is_name=False,
-        state=CreateRoute)
-    dp.register_callback_query_handler(
-        process_callback_routes,
-        cd_routes.filter())

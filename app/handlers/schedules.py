@@ -1,7 +1,6 @@
 import json
-import logging
 
-from aiogram import Dispatcher, types
+from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 import app.utils.uchar as uchar
@@ -10,18 +9,32 @@ from app.models import Route, Schedule
 from app.states import CreateSchedule
 
 
-async def schedule_add(cb: types.CallbackQuery, route_id: int):
-    await cb.message.answer(
-        '<code>1/2</code> Пожалуйста, введите желаемое время уведомления о маршруте в формате <code>ЧЧ:ММ</code>.')
-    CreateSchedule.route_id = route_id
+async def schedule_list(cb: types.CallbackQuery, callback_data: dict):
+    """
+    List all schedules for specific route.
+    """
+    route_id = callback_data['route_id']
+    route = Route.get_by_id(route_id)
+    schedules = route.schedules
+    await cb.message.edit_text(f'Настройка уведомлений для маршрута <b>{route.name}</b>.', reply_markup=kb_schedule_list(schedules, route_id))
+    await cb.answer()
+
+
+async def schedule_add(cb: types.CallbackQuery, callback_data: dict):
+    await cb.message.edit_text(
+        '<code>1/2</code> Пожалуйста, выберите желаемое время уведомления о маршруте.',
+        reply_markup=kb_schedule_times()
+    )
+    CreateSchedule.route_id = callback_data['route_id']
     await CreateSchedule.time.set()
     await cb.answer()
 
 
-async def schedule_add_time(message: types.Message, state: FSMContext):
-    await state.update_data(time=message.text)
+async def schedule_add_time(cb: types.CallbackQuery, callback_data: dict, state: FSMContext):
+    time = callback_data['time']
+    await state.update_data(time=time)
     await CreateSchedule.next()
-    await message.answer('<code>2/2</code> Теперь выберите дни, в которые надо получать уведомления.', reply_markup=kb_schedule_days())
+    await cb.message.edit_text('<code>2/2</code> Теперь выберите дни, в которые надо получать уведомления.', reply_markup=kb_schedule_days())
 
 
 async def schedule_add_days(cb: types.CallbackQuery, state: FSMContext):
@@ -49,23 +62,3 @@ async def schedule_add_error(message: types.Message):
     Handle errors in create shcedule process.
     """
     await message.answer('Не понимаю этот формат. Попробуйте еще раз или введите команду отмены /cancel.')
-
-
-def register_handlers_schedules(dp: Dispatcher):
-    """
-    Register schedule handlers in Dispatcher.
-    """
-    logging.info('Configuring schedule handlers...')
-    dp.register_message_handler(
-        schedule_add_time,
-        is_time=True,
-        state=CreateSchedule.time)
-    dp.register_callback_query_handler(
-        schedule_add_days,
-        cd_schedule_days.filter(),
-        state=CreateSchedule.days)
-    dp.register_message_handler(
-        schedule_add_error,
-        is_time=False,
-        state=CreateSchedule
-    )

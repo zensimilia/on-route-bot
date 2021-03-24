@@ -1,5 +1,6 @@
 from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
                            KeyboardButton, ReplyKeyboardMarkup)
+from aiogram.utils import callback_data
 from aiogram.utils.callback_data import CallbackData
 
 import app.utils.uchar as uchar
@@ -11,17 +12,35 @@ btn_cancel = InlineKeyboardButton('Отмена', callback_data=cb_cancel)
 
 def kb_settings() -> InlineKeyboardMarkup:
     """
-    Main keyboard for `/settings` command.
+    Return keyboard with list of settings.
     """
-    cb_tz = cd_settings.new(action='tz', data='void')
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    f'{uchar.CLOCK} Часовой пояс',
-                    callback_data=cb_tz)
+                    f'{uchar.GLOBE} Часовой пояс',
+                    callback_data=cd_settings.new(action='tz', data=False))
             ],
-            [btn_cancel]
+        ]
+    )
+
+
+def kb_settings_tz() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    'Изменить часовой пояс',
+                    callback_data=cd_settings.new(
+                        action='tz-change', data=False)
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    f'{uchar.BACK_ARROW} Назад',
+                    callback_data=cd_settings.new(action='list', data=False)
+                )
+            ]
         ]
     )
 

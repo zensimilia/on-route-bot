@@ -19,3 +19,10 @@ class CreateSchedule(StatesGroup):
 
     time = State()
     days = State()
+
+
+class SetTimezone(StatesGroup):
+    """
+    State class for setting user timezone.
+    """
+    tz = State()
