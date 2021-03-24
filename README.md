@@ -30,7 +30,6 @@ $ python bot.py
 ```
 BOT_TOKEN={bot token}
 DB_FILE=store/{sqlite database filename}
-ENV={development | production}
 DEBUG={True | False}
 ```
 
@@ -43,3 +42,4 @@ DEBUG={True | False}
 -   peewee
 -   SQLAlchemy
 -   APScheduler
+-   Pydantic
