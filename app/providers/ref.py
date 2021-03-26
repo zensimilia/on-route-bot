@@ -1,9 +1,11 @@
+from abc import ABC, abstractmethod
+from typing import Dict, List, NamedTuple, Union
 from urllib import parse
 
 import requests
-from typing import Union, List, NamedTuple
 from bs4 import BeautifulSoup
-from abc import ABC, abstractmethod
+from requests.exceptions import RequestException
+from typing_extensions import Final
 
 
 class Point(NamedTuple):
@@ -26,7 +28,7 @@ class YARequestError(Exception):
     pass
 
 
-class Weather(ABC):
+class AbstractWeather(ABC):
     """ Abstract weather class.
 
     Implement your own subclass of web scraping or get by API weather
@@ -59,11 +61,12 @@ class Weather(ABC):
     def fact(self) -> str:
         ...
 
+    @classmethod
     def __str__(self) -> str:
         return f'{self.temp} {self.fact}.'
 
 
-class YandexWeather(Weather):
+class YandexWeather(AbstractWeather):
     """
     Class form parsing info about weather from Yandex Weather.
 
@@ -71,61 +74,54 @@ class YandexWeather(Weather):
     :param float lon: Coordinates longitude.
     """
 
-    PARSER = 'html.parser'  # parser for soup
-    HEADERS = {'User-Agent': 'Mozilla/5.0'}  # headers for requests
-    WEATHER_PROVIDER = 'Yandex'
-    ENDPOINT = 'https://yandex.ru/pogoda/maps/nowcast'
+    PARSER: str = 'html.parser'
+    HEADERS: Dict[str, str] = {
+        'User-Agent': 'Mozilla/5.0'
+    }
+    PROVIDER: Final[str] = 'Yandex'
+    ENDPOINT: str = 'https://yandex.ru/pogoda/maps/nowcast'
 
     def __init__(self, coords: Point) -> None:
-        self.lat = coords.lat
-        self.lon = coords.lon
-        self.url = self.ENDPOINT + f'?lat={self.lat}&lon={self.lon}'
+        """ Constructor. """
+        self.coords = coords
+        self.url = self.ENDPOINT + f'?lat={coords.lat}&lon={coords.lon}'
 
     @property
     def temp(self) -> str:
-        """
-        Get value of current temperature.
-        """
+        """ Get value of current temperature. """
         if not hasattr(self, '_temp'):
-            setattr(self, '_temp', self.get_text(
+            setattr(self, '_temp', self.get_element_text(
                 'span', class_='temp__value_with-unit'))
         return getattr(self, '_temp')
 
     @property
     def fact(self) -> str:
-        """
-        Get fact about current weather cast.
-        """
+        """ Get fact about current weather cast. """
         classes = [
             'weather-maps-fact__nowcast-alert',
             'weather-maps-fact__condition'
         ]
         if not hasattr(self, '_fact'):
             # todo: check `weather-maps-fact__condition` if exception
-            setattr(self, '_fact', self.get_text(
+            setattr(self, '_fact', self.get_element_text(
                     'div', class_=classes))
         return getattr(self, '_fact')
 
-    def get_text(self, tag: str, class_: Union[List, str]) -> str:
-        """
-        Return parsed text from found element by parameters.
+    def get_element_text(self, tag: str, class_: Union[List, str]) -> str:
+        """ Return text from first found element by given criteria.
 
-        :param str tag: What HTML-tag to parse.
-        :param str class_: What class to parse.
+        :param tag: What HTML-tag to find.
+        :param class_: What class or list of classes to find.
         """
         try:
-            if class_.__class__.__name__ in ('list', 'tuple'):
-                return self.soup.find_all(tag, class_=class_)[0].text
-            else:
-                return self.soup.find(tag, class_=class_).text
-        except Exception as e:
-            raise YAParseError('Что-то пошло не так!')
+            element = self.soup.find_all(tag, class_=class_)[0]
+        except Exception:
+            return 'Н/Д'
+        return element.text
 
     @property
     def soup(self) -> BeautifulSoup:
-        """
-        Property, returns `soup` from raw HTML.
-        """
+        """ Returns soup data structure from raw HTML. """
         if not hasattr(self, '_soup'):
             html = self._get_http_response(self.url)
             soup = BeautifulSoup(html, self.PARSER)
@@ -133,16 +129,19 @@ class YandexWeather(Weather):
         return getattr(self, '_soup')
 
     def _get_http_response(self, url: str) -> str:
-        """
-        Helper method, sends HTTP request and returns response payload.
+        """ Helper method, sends HTTP request and returns response payload.
 
-        :param str url: The URL to make request for.
+        :param url: The URL to make request for.
         """
         try:
             response = requests.get(url, headers=self.HEADERS)
-        except Exception as e:
-            raise YARequestError('Возникли проблемы с получением данных!')
+        except RequestException as e:
+            raise YARequestError('Возникли проблемы с получением данных!', e)
         return response.text
+
+
+test = YandexWeather(Point(12345.028488, 12338.967086))
+print(test.temp, test.fact)
 
 
 class YAMParser:
@@ -239,9 +238,3 @@ class YAMParser:
         swaprl = ','.join(reversed(rtext[-1].split(',')))
         map_url = f'https://static-maps.yandex.ru/1.x/?l=map,trf&size=650,450&bbox={swaprf}~{swaprl}'
         return map_url
-
-
-point = Point(45.026784, 38.978674)
-info = YandexWeather(point)
-print('__str__', info)
-print('__repr__', info.__repr__)
