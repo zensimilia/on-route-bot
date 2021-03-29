@@ -10,9 +10,11 @@ from app.utils.scheduler import Scheduler
 bot = Bot(token=Config.BOT_TOKEN, parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
+log = logging.getLogger(__name__)
+
 
 async def set_bot_commands(bot: Bot):
-    logging.info('Configuring bot commands...')
+    log.info('Configuring bot commands...')
     commands = [
         types.BotCommand('routes', 'список всех маршрутов'),
         types.BotCommand('routeadd', 'добавить маршрут'),

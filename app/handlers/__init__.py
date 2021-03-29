@@ -4,12 +4,14 @@ from .schedules import *
 from .settings import *
 from aiogram.dispatcher import Dispatcher
 
+log = logging.getLogger(__name__)
+
 
 def register_handlers_routes(dp: Dispatcher):
     """
     Register routes handlers in Dispatcher.
     """
-    logging.info('Configuring routes handlers...')
+    log.info('Configuring routes handlers...')
     dp.register_message_handler(
         route_list,
         commands='routes')
@@ -66,7 +68,7 @@ def register_handlers_schedules(dp: Dispatcher):
     """
     Register schedule handlers in Dispatcher.
     """
-    logging.info('Configuring schedule handlers...')
+    log.info('Configuring schedule handlers...')
     dp.register_message_handler(
         schedule_add_time,
         is_time=True,
@@ -94,7 +96,7 @@ def register_handlers_settings(dp: Dispatcher):
     """
     Register routes handlers in Dispatcher.
     """
-    logging.info('Configuring settings handlers...')
+    log.info('Configuring settings handlers...')
     dp.register_message_handler(settings_list, commands="settings")
     dp.register_callback_query_handler(
         settings_list, cd_settings.filter(action='list')
