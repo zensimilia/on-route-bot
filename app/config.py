@@ -1,3 +1,4 @@
+from typing import Dict, Optional
 from pydantic import BaseSettings
 
 
@@ -13,6 +14,7 @@ class AppConfig(BaseSettings):
     DEBUG: bool = False
     BOT_TOKEN: str
     DB_FILE: str = 'data.sqlite'
+    LOG_CONFIG: Optional[Dict] = None
 
     class Config:
         """Load variables from the dotenv file."""

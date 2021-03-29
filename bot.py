@@ -1,5 +1,3 @@
-import logging
-
 from aiogram import executor
 
 from app.config import Config
@@ -7,15 +5,15 @@ from app.handlers.common import register_handlers_common
 from app.handlers import register_handlers_routes, register_handlers_schedules, register_handlers_settings
 from app.main import dp, on_startup, on_shutdown
 from app.filters import register_filters
-
-# configure logging
-logging_level = logging.DEBUG if Config.DEBUG else logging.INFO
-logging.basicConfig(level=logging_level)
+from app.utils.log import configure_logging
 
 
 def main():
     # register custom filters
     register_filters(dp)
+
+    # configure logging
+    configure_logging(Config.LOG_CONFIG)
 
     # register Dispatcher handlers
     register_handlers_common(dp)

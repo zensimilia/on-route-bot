@@ -14,7 +14,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     },
     'formatters': {
         'default': {
-            'format': '%(asctime)s %(name)s - %(levelname)s: %(message)s',
+            'format': '%(asctime)s %(levelname)-8s: %(name)s - %(message)s',
         }
     },
     'loggers': {
