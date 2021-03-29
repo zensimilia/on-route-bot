@@ -1,6 +1,6 @@
 import logging
 import logging.config
-from typing import Any, Dict
+from typing import Optional
 
 DEFAULT_CONFIG = {
     'version': 1,
@@ -35,8 +35,10 @@ DEFAULT_CONFIG = {
 }
 
 
-def configure_logging(config: Dict[str, Any] = None) -> None:
-    """ Configure logging with dict of settings. """
-    if config is None:
-        config = DEFAULT_CONFIG
-    logging.config.dictConfig(config)
+def configure_logging(config: Optional[dict] = None) -> None:
+    """ Configure logging with dict of settings. By default takes config from
+    global ``DEFAULT_CONFIG`` variable, using console and file handlers.
+
+    :param config: Dict with logging configuration.
+    """
+    logging.config.dictConfig(config or DEFAULT_CONFIG)
