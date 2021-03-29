@@ -2,7 +2,7 @@ import logging
 import logging.config
 from typing import Any, Dict
 
-DEFAULT_CONFIG: Dict[str, Any] = {
+DEFAULT_CONFIG = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
@@ -10,6 +10,14 @@ DEFAULT_CONFIG: Dict[str, Any] = {
             'class': 'logging.StreamHandler',
             'level': 'INFO',
             'formatter': 'default'
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'level': 'WARNING',
+            'formatter': 'default',
+            'maxBytes': 1e6,
+            'filename': 'store/log.txt',
+            'backupCount': 3
         },
     },
     'formatters': {
@@ -19,7 +27,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     },
     'loggers': {
         '': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': True
         }
