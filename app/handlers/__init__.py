@@ -2,15 +2,20 @@ import logging
 from .routes import *
 from .schedules import *
 from .settings import *
+from .errors import errors_handler
 from aiogram.dispatcher import Dispatcher
 
 log = logging.getLogger(__name__)
 
 
+def register_errors_handler(dp: Dispatcher):
+    """ Register handler for errors. """
+    log.info('Configuring errors handlers...')
+    dp.register_errors_handler(errors_handler)
+
+
 def register_handlers_routes(dp: Dispatcher):
-    """
-    Register routes handlers in Dispatcher.
-    """
+    """ Register routes handlers in Dispatcher. """
     log.info('Configuring routes handlers...')
     dp.register_message_handler(
         route_list,
@@ -65,9 +70,7 @@ def register_handlers_routes(dp: Dispatcher):
 
 
 def register_handlers_schedules(dp: Dispatcher):
-    """
-    Register schedule handlers in Dispatcher.
-    """
+    """ Register schedule handlers in Dispatcher. """
     log.info('Configuring schedule handlers...')
     dp.register_message_handler(
         schedule_add_time,
@@ -93,9 +96,7 @@ def register_handlers_schedules(dp: Dispatcher):
 
 
 def register_handlers_settings(dp: Dispatcher):
-    """
-    Register routes handlers in Dispatcher.
-    """
+    """ Register routes handlers in Dispatcher. """
     log.info('Configuring settings handlers...')
     dp.register_message_handler(settings_list, commands="settings")
     dp.register_callback_query_handler(
