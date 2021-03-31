@@ -7,34 +7,28 @@ log = logging.getLogger(__name__)
 
 
 class GeoPoint(NamedTuple):
-    """ Data type for geo coordinates. """
     lat: float
     lon: float
 
 
-class CronDay(NamedTuple):
-    """ Data type for cron `day of week` field. """
+class DayField(NamedTuple):
     cron: str
     title: str
 
 
 class DayOfWeek(Enum):
-    """ Day of week data type.
+    """Data type for day of week cron field."""
 
-    Attributes:
-        cron  (str) : Day in cron string format.
-        title (str) : Title of week day or week period.
-    """
-    SUN = CronDay('0', 'Воскресенье')
-    MON = CronDay('1', 'Понедельник')
-    TUE = CronDay('2', 'Вторник')
-    WED = CronDay('3', 'Среда')
-    THU = CronDay('4', 'Четверг')
-    FRI = CronDay('5', 'Пятница')
-    SAT = CronDay('6', 'Суббота')
-    WRK = CronDay('1-5', 'Рабочие дни')
-    WND = CronDay('6,0', 'Выходные дни')
-    ALL = CronDay('*', 'Ежедневно')
+    SUN = DayField('0', 'Воскресенье')
+    MON = DayField('1', 'Понедельник')
+    TUE = DayField('2', 'Вторник')
+    WED = DayField('3', 'Среда')
+    THU = DayField('4', 'Четверг')
+    FRI = DayField('5', 'Пятница')
+    SAT = DayField('6', 'Суббота')
+    WORK = DayField('1-5', 'Рабочие дни')
+    END = DayField('6,0', 'Выходные дни')
+    EVERY = DayField('*', 'Ежедневно')
 
     @property
     def cron(self) -> str:
@@ -45,24 +39,45 @@ class DayOfWeek(Enum):
         return self.value.title
 
     @classmethod
-    def by_cron(cls, cron_string: str) -> 'CronDay':
-        """ Return `CronDay` instance filtered by `cron` attribute.
-                :param cron_string: A string by which filtered.
+    def by_string(cls, field: str) -> DayField:
+        """Get matching object by cron field string.
+
+        Example::
+
+            day = DayOfWeek.by_string('1-2')
+            print(day.cron, day.`title) # 1-2 Понедельник-Вторник
+
+        Args:
+            field (str): cron field string.
+
+        Raises:
+            ValueError: if arg not in valid format.
+
+        Returns:
+            DayField: object with attributes: cron, title.
         """
-        pattern = re.compile('^(\*|[0-6](-[0-6])?)(,(\*|[0-7](-[0-7])?))*$')
-        if not pattern.match(cron_string):
-            log.error(f'Can\'t parse cron string: {cron_string}.')
-            raise ValueError()
+        pattern = re.compile(r'^(\*|[0-6](-[0-6])?)(,(\*|[0-6](-[0-6])?))*$')
+        if not pattern.match(field):
+            log.error(f'Can\'t parse cron field: {field}.')
+            raise ValueError('arg not in valid format')
         try:
-            return next(t.value for t in cls if t.value.cron == cron_string)
+            return next(t.value for t in cls if t.value.cron == field)
         except StopIteration:
-            log.warning(f'Can\'t find constant for cron string: {cron_string}.')
-            return cls.__parse_cron(cron_string)
+            log.warning(f'Can\'t find constant for cron field: {field}.')
+            return cls.__parse_cron(field)
 
     @classmethod
-    def __parse_cron(cls, cron_string: str) -> 'CronDay':
+    def __parse_cron(cls, field: str) -> DayField:
+        """Parse cron field and return day object.
+
+        Args:
+            field (str): cron field string.
+
+        Returns:
+            DayField: object with attributes: cron, title.
+        """
         titles = list()
-        separator = re.findall(r'[^\d\s]', cron_string)[0]
-        for num in cron_string.split(separator):
-            titles.append(cls.by_cron(num).title)
-        return CronDay(cron=cron_string, title=separator.join(titles))
+        separator = re.findall(r'[^\d\s]', field)[0]
+        for num in field.split(separator):
+            titles.append(cls.by_string(num).title)
+        return DayField(field, separator.join(titles))

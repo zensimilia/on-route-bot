@@ -6,6 +6,6 @@ def humanize(data: dict) -> str:
 
     :param data: Contains 'minute', 'hour', and 'day_of_week'.
     """
-    day = DayOfWeek.by_cron(data['day_of_week'])
+    day = DayOfWeek.by_string(data['day_of_week'])
 
     return f"{day.title}, в {data['hour']}:{data['minute']}"
