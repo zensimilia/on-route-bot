@@ -1,11 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import NamedTuple
-
-
-class Point(NamedTuple):
-    """ Data type for geo coordinates. """
-    lat: float
-    lon: float
+from app.types import Point
 
 
 class NoWeatherContent(Exception):
@@ -35,6 +29,7 @@ class AbstractWeather(ABC):
 
         :param position: A Point object representing geo coordinates.
         """
+        ...
 
     @property
     @abstractmethod
