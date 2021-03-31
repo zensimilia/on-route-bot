@@ -14,9 +14,9 @@ cd_schedule_days = CallbackData('schedule_days', 'days')
 cd_schedule_times = CallbackData('schedule_time', 'time')
 
 
-def kb_schedule_list(schedules: Union[dict, None], route_id: int) -> InlineKeyboardMarkup:
+def kb_schedule_list(schedules: Union[list, None], route_id: int) -> InlineKeyboardMarkup:
     buttons = list()
-    if schedules.count():
+    if schedules is not None:
         for schedule in schedules:
             cron = json.loads(schedule.schedule)
             readable = cronity.humanize(cron)

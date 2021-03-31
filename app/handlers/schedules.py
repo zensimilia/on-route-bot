@@ -4,7 +4,8 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 import app.utils.uchar as uchar
-from app.keyboards.inline_schedule import *
+from app.keyboards.inline_schedule import (
+    kb_schedule_days, kb_schedule_list, kb_schedule_times, cd_schedule_days)
 from app.models import Route, Schedule
 from app.states import CreateSchedule
 
