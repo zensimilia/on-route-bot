@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from app.types import Point
+from app.types import GeoPoint
 
 
 class NoWeatherContent(Exception):
@@ -24,7 +24,7 @@ class AbstractWeather(ABC):
     """
 
     @abstractmethod
-    def __init__(self, position: Point) -> None:
+    def __init__(self, position: GeoPoint) -> None:
         """Constructor with at least one required argument.
 
         :param position: A Point object representing geo coordinates.
@@ -42,5 +42,5 @@ class AbstractWeather(ABC):
         ...
 
     @classmethod
-    def __str__(self) -> str:
-        return f'{self.temp} {self.fact}.'
+    def __str__(cls) -> str:
+        return f'{cls.temp} {cls.fact}.'
