@@ -58,12 +58,12 @@ class DayOfWeek(Enum):
         """
         pattern = re.compile(r'^(\*|[0-6](-[0-6])?)(,(\*|[0-6](-[0-6])?))*$')
         if not pattern.match(field):
-            log.error(f'Can\'t parse cron field: {field}.')
+            log.error('Can\'t parse cron field: %s.', field)
             raise ValueError('arg not in valid format')
         try:
             return next(t.value for t in cls if t.value.cron == field)
         except StopIteration:
-            log.warning(f'Can\'t find constant for cron field: {field}.')
+            log.warning('Can\'t find constant for cron field: %s.', field)
             return cls.__parse_cron(field)
 
     @classmethod
