@@ -14,7 +14,9 @@ cd_schedule_days = CallbackData('schedule_days', 'days')
 cd_schedule_times = CallbackData('schedule_time', 'time')
 
 
-def kb_schedule_list(schedules: Union[list, None], route_id: int) -> InlineKeyboardMarkup:
+def kb_schedule_list(
+        schedules: Union[list, None],
+        route_id: int) -> InlineKeyboardMarkup:
     buttons = list()
     if schedules is not None:
         for schedule in schedules:
@@ -31,10 +33,15 @@ def kb_schedule_list(schedules: Union[list, None], route_id: int) -> InlineKeybo
         [
             InlineKeyboardButton(
                 f'{uchar.BACK_ARROW} Назад',
-                callback_data=cd_routes.new(action='select', route_id=route_id)),
+                callback_data=cd_routes.new(
+                    action='select',
+                    route_id=route_id)),
             InlineKeyboardButton(
                 f'{uchar.NEW} Добавить',
-                callback_data=cd_schedules.new('add', False, route_id=route_id)),
+                callback_data=cd_schedules.new(
+                    'add',
+                    False,
+                    route_id=route_id)),
 
         ]
     )
@@ -71,13 +78,13 @@ def kb_schedule_days() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    'Ежедневно', callback_data=cd_schedule_days.new(days="*"))
+                    'Ежедневно', callback_data=cd_schedule_days.new(days='*'))
             ],
             [
                 InlineKeyboardButton(
-                    'Рабочие', callback_data=cd_schedule_days.new(days="1-5")),
+                    'Рабочие', callback_data=cd_schedule_days.new(days='1-5')),
                 InlineKeyboardButton(
-                    'Выходные', callback_data=cd_schedule_days.new(days="6-0"))
+                    'Выходные', callback_data=cd_schedule_days.new(days='6-0'))
             ],
             [
                 InlineKeyboardButton(

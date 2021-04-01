@@ -1,11 +1,10 @@
 from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
                            KeyboardButton, ReplyKeyboardMarkup)
-from aiogram.utils import callback_data
 from aiogram.utils.callback_data import CallbackData
 
-import app.utils.uchar as uchar
+from app.utils import uchar
 
-cd_settings = CallbackData("settings_menu", "action", "data")
+cd_settings = CallbackData('settings_menu', 'action', 'data')
 cb_cancel = cd_settings.new(action='cancel', data='void')
 btn_cancel = InlineKeyboardButton('Отмена', callback_data=cb_cancel)
 
@@ -53,7 +52,7 @@ def kb_settings_user_location() -> ReplyKeyboardMarkup:
         [
             [
                 KeyboardButton(
-                    text="Отправить местоположение",
+                    text='Отправить местоположение',
                     request_location=True)
             ]
         ],

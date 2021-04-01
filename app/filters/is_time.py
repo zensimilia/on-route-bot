@@ -13,9 +13,8 @@ class IsTime(BoundFilter):
     """
 
     key = "is_time"
-
     is_time: bool
 
     async def check(self, message: types.Message) -> bool:
         is_time_valid = is_time(message.text)
-        return is_time_valid if self.is_time else not is_time_valid
+        return is_time_valid and self.is_time

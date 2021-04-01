@@ -5,7 +5,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types.callback_query import CallbackQuery
 
-import app.utils.uchar as uchar
+from app.utils import uchar
 from app.keyboards.common import *
 from app.keyboards.inline_route import *
 from app.models import Route, User
