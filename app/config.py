@@ -1,10 +1,9 @@
-from typing import Dict, Optional
+from typing import Optional
 from pydantic import BaseSettings
 
 
 class AppConfig(BaseSettings):
-    """
-    Global application configurations.
+    """Global application configurations.
 
     Variables will be loaded from the .env file. However, if
     there is a shell environment variable having the same name,
@@ -14,7 +13,7 @@ class AppConfig(BaseSettings):
     DEBUG: bool = False
     BOT_TOKEN: str
     DB_FILE: str = 'data.sqlite'
-    LOG_CONFIG: Optional[Dict] = None
+    LOG_CONFIG: Optional[dict] = None
 
     class Config:
         """Load variables from the dotenv file."""

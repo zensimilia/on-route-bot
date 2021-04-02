@@ -32,7 +32,7 @@ async def set_bot_commands(bot_instance: Bot):
     await bot_instance.set_my_commands(commands)
 
 
-async def on_startup():
+async def on_startup(_: Dispatcher):
     """Execute function before Bot start polling."""
     # initialize database and tables
     models_list = (
@@ -49,7 +49,7 @@ async def on_startup():
     await set_bot_commands(bot)
 
 
-async def on_shutdown():
+async def on_shutdown(_: Dispatcher):
     """Execute function before Bot shut down polling."""
     # remove all jobs and shut down the Scheduler
     Scheduler.remove_all_jobs()
