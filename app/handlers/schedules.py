@@ -48,10 +48,9 @@ async def schedule_add_days(
     cb: types.CallbackQuery, callback_data: dict, state: FSMContext
 ):
     """Save schedule data to database."""
-    await state.update_data(days=callback_data['days'])
     state_data = await state.get_data()
     time = state_data['time'].split(':')
-    day_of_week = state_data['days']
+    day_of_week = callback_data['days']
     schedule = {
         'hour': time[0],
         'minute': time[1],
@@ -59,18 +58,37 @@ async def schedule_add_days(
     }
     route = Route.get_by_id(CreateSchedule.route_id)
     Schedule.create(route=route, schedule=json.dumps(schedule), is_active=True)
-    await cb.message.delete_reply_markup()
-    await cb.message.edit_text(
-        f'Уведомление добавлено {uchar.OK_HAND} '
-        '\nВернуться к списку маршрутов /routes'
-    )
-    await cb.answer()
+    callback_data['route_id'] = route.id
     await state.finish()
+    await cb.answer(f'Уведомление добавлено {uchar.OK_HAND} ')
+    await schedule_list(cb, callback_data=callback_data)
 
 
-async def schedule_add_error(message: types.Message):
-    """Handle errors in create shcedule process."""
-    await message.answer(
-        'Не понимаю этот формат. Попробуйте еще раз '
-        'или введите команду отмены /cancel.'
+async def schedule_select(cb: types.CallbackQuery, callback_data: dict):
+    """Show single schedule."""
+    schedule = Schedule.get_by_id(callback_data['schedule_id'])
+    route = schedule.route
+    await cb.message.edit_text(
+        f'Редактирование уведомления для маршрута <b>{route.name}</b>',
+        reply_markup=inline_schedule.kb_schedule_show(
+            schedule.id, route.id, schedule.is_active
+        ),
     )
+
+
+async def schedule_toggle(cb: types.CallbackQuery, callback_data: dict):
+    """Toggle is_active schedule property."""
+    single_schedule = Schedule.get_by_id(callback_data['schedule_id'])
+    toggle = not single_schedule.is_active
+    Schedule.update(is_active=toggle).where(
+        Schedule.id == single_schedule.id
+    ).execute()
+    await cb.answer('toggle')
+    await schedule_select(cb, callback_data)
+
+
+async def schedule_delete(cb: types.CallbackQuery, callback_data: dict):
+    """Delete schedule."""
+    Schedule.delete_by_id(callback_data['schedule_id'])
+    await cb.answer('Расписание уведомления удалено')
+    await schedule_list(cb, callback_data)

@@ -70,15 +70,24 @@ def register_handlers_schedules(dp: Dispatcher):
         inline_schedule.cd_schedule_days.filter(),
         state=CreateSchedule.days,
     )
-    dp.register_message_handler(
-        schedules.schedule_add_error, is_time=False, state=CreateSchedule
-    )
     dp.register_callback_query_handler(
         schedules.schedule_list, cd_routes.filter(action='schedule')
     )
     dp.register_callback_query_handler(
+        schedules.schedule_toggle,
+        inline_schedule.cd_schedules.filter(action='toggle'),
+    )
+    dp.register_callback_query_handler(
+        schedules.schedule_delete,
+        inline_schedule.cd_schedules.filter(action='delete'),
+    )
+    dp.register_callback_query_handler(
         schedules.schedule_add,
         inline_schedule.cd_schedules.filter(action='add'),
+    )
+    dp.register_callback_query_handler(
+        schedules.schedule_select,
+        inline_schedule.cd_schedules.filter(action='select'),
     )
 
 

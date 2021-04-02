@@ -18,6 +18,46 @@ cd_schedule_days = CallbackData('schedule_days', 'days')
 cd_schedule_times = CallbackData('schedule_time', 'time', sep='|')  # fixed sep
 
 
+def kb_schedule_show(
+    schedule_id: int, route_id: int, is_active: bool
+) -> InlineKeyboardMarkup:
+    """Display keyboard with actions for single schedule."""
+    status = uchar.BELL if not is_active else uchar.BELL_STROKE
+    toggle = 'Отключить уведомления' if is_active else 'Включить уведомления'
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    f'{status} {toggle}',
+                    callback_data=cd_schedules.new(
+                        action='toggle',
+                        schedule_id=schedule_id,
+                        route_id=False,
+                    ),
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    f'{uchar.WASTEBASKET} Удалить',
+                    callback_data=cd_schedules.new(
+                        action='delete',
+                        schedule_id=schedule_id,
+                        route_id=route_id,
+                    ),
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    f'{uchar.BACK_ARROW} Назад',
+                    callback_data=cd_routes.new(
+                        action='schedule', route_id=route_id
+                    ),
+                ),
+            ],
+        ]
+    )
+
+
 def kb_schedule_list(
     schedules: Union[list, None], route_id: int
 ) -> InlineKeyboardMarkup:
