@@ -1,5 +1,5 @@
 import logging
-from . import routes, errors, schedules, settings
+from . import routes, errors, schedules, settings, common
 from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher.filters import Text
 from app.states import CreateRoute, CreateSchedule, SetTimezone
@@ -131,3 +131,17 @@ def register_handlers_settings(dp: Dispatcher):
         state=SetTimezone
     )
     dp.register_message_handler(settings.settings_tz_error, state=SetTimezone)
+
+
+def register_handlers_common(dp: Dispatcher):
+    """Register common handlers in Dispatcher."""
+    log.info('Configuring common handlers...')
+    dp.register_message_handler(common.schedule_test, commands='test')
+    dp.register_message_handler(common.cmd_start, commands='start')
+    dp.register_message_handler(common.cmd_about, commands='about')
+    dp.register_message_handler(common.cmd_cancel, commands='cancel', state='*')
+    dp.register_message_handler(
+        common.cmd_cancel,
+        Text(equals='отмена', ignore_case=True),
+        state='*'
+    )

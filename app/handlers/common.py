@@ -1,9 +1,8 @@
 import datetime
 import logging
 
-from aiogram import Dispatcher, types
+from aiogram import types
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text
 from apscheduler.triggers.cron import CronTrigger
 
 from app.main import bot
@@ -64,17 +63,4 @@ async def say_hello(chat: int):
     await bot.send_message(
         chat_id=chat,
         text=f'Hello! Current time is: {datetime.datetime.now()}'
-    )
-
-
-def register_handlers_common(dp: Dispatcher):
-    log.info('Configuring common handlers...')
-    dp.register_message_handler(schedule_test, commands='test')
-    dp.register_message_handler(cmd_start, commands='start')
-    dp.register_message_handler(cmd_about, commands='about')
-    dp.register_message_handler(cmd_cancel, commands='cancel', state='*')
-    dp.register_message_handler(
-        cmd_cancel,
-        Text(equals='отмена', ignore_case=True),
-        state='*'
     )
