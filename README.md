@@ -43,3 +43,7 @@ DEBUG={True | False}
 -   SQLAlchemy
 -   APScheduler
 -   Pydantic
+
+## Development and contribution
+
+1. **Formatting**: default is `autopep8`, but `black` allowed with `-S` param (don't format quotes).
