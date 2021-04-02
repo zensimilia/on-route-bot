@@ -14,21 +14,22 @@ class GeoPoint(NamedTuple):
 class DayField(NamedTuple):
     cron: str
     title: str
+    short: str
 
 
 class DayOfWeek(Enum):
     """Data type for day of week cron field."""
 
-    SUN = DayField('0', 'Воскресенье')
-    MON = DayField('1', 'Понедельник')
-    TUE = DayField('2', 'Вторник')
-    WED = DayField('3', 'Среда')
-    THU = DayField('4', 'Четверг')
-    FRI = DayField('5', 'Пятница')
-    SAT = DayField('6', 'Суббота')
-    WORK = DayField('1-5', 'Рабочие дни')
-    END = DayField('6,0', 'Выходные дни')
-    EVERY = DayField('*', 'Ежедневно')
+    SUN = DayField('0', 'Воскресенье', 'Вс')
+    MON = DayField('1', 'Понедельник', 'Пн')
+    TUE = DayField('2', 'Вторник', 'Вт')
+    WED = DayField('3', 'Среда', 'Ср')
+    THU = DayField('4', 'Четверг', 'Чт')
+    FRI = DayField('5', 'Пятница', 'Пт')
+    SAT = DayField('6', 'Суббота', 'Сб')
+    WORK = DayField('1-5', 'Рабочие дни', 'Раб')
+    END = DayField('6,0', 'Выходные дни', 'Вых')
+    EVERY = DayField('*', 'Ежедневно', 'Ежд')
 
     @property
     def cron(self) -> str:
@@ -37,6 +38,10 @@ class DayOfWeek(Enum):
     @property
     def title(self) -> str:
         return self.value.title
+
+    @property
+    def short(self) -> str:
+        return self.value.short
 
     @classmethod
     def by_string(cls, field: str) -> DayField:
@@ -54,7 +59,7 @@ class DayOfWeek(Enum):
             ValueError: if arg not in valid format.
 
         Returns:
-            DayField: object with attributes: cron, title.
+            DayField: object with attributes: cron, title, short.
         """
         pattern = re.compile(r'^(\*|[0-6](-[0-6])?)(,(\*|[0-6](-[0-6])?))*$')
         if not pattern.match(field):
@@ -77,7 +82,10 @@ class DayOfWeek(Enum):
             DayField: object with attributes: cron, title.
         """
         titles = list()
+        shorts = list()
         separator = re.findall(r'[^\d\s]', field)[0]
         for num in field.split(separator):
-            titles.append(cls.by_string(num).title)
-        return DayField(field, separator.join(titles))
+            item = cls.by_string(num)
+            titles.append(item.title)
+            shorts.append(item.short)
+        return DayField(field, separator.join(titles), separator.join(shorts))
