@@ -13,9 +13,8 @@ class IsUrl(BoundFilter):
     """
 
     key = "is_url"
-
     is_url: bool
 
     async def check(self, message: types.Message) -> bool:
         is_url_valid = is_url(message.text)
-        return is_url_valid if self.is_url else not is_url_valid
+        return is_url_valid and self.is_url

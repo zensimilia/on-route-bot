@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from app.config import Config
-from app.models import *
+from app import models
 from app.utils.scheduler import Scheduler
 
 bot = Bot(token=Config.BOT_TOKEN, parse_mode=types.ParseMode.HTML)
@@ -13,7 +13,13 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 log = logging.getLogger(__name__)
 
 
-async def set_bot_commands(bot: Bot):
+async def set_bot_commands(bot_instance: Bot):
+    """Sets bot commands that can be selected from the list
+    when user start typing a message from '/' symbol.
+
+    Args:
+        bot_instance (Bot): The Bot instance as is.
+    """
     log.info('Configuring bot commands...')
     commands = [
         types.BotCommand('routes', 'список всех маршрутов'),
@@ -23,20 +29,18 @@ async def set_bot_commands(bot: Bot):
         types.BotCommand('settings', 'настройки'),
         types.BotCommand('cancel', 'отменить текущую команду')
     ]
-    await bot.set_my_commands(commands)
+    await bot_instance.set_my_commands(commands)
 
 
-async def on_startup(dp: Dispatcher):
-    """
-    Execute function before Bot start polling.
-    """
+async def on_startup(_: Dispatcher):
+    """Execute function before Bot start polling."""
     # initialize database and tables
-    models = (
-        User,
-        Route,
-        Schedule
+    models_list = (
+        models.User,
+        models.Route,
+        models.Schedule
     )
-    db.create_tables(models)
+    models.db.create_tables(models_list)
 
     # start scheduler jobs
     Scheduler.start()
@@ -45,10 +49,8 @@ async def on_startup(dp: Dispatcher):
     await set_bot_commands(bot)
 
 
-async def on_shutdown(dp: Dispatcher):
-    """
-    Execute function before Bot shut down polling.
-    """
+async def on_shutdown(_: Dispatcher):
+    """Execute function before Bot shut down polling."""
     # remove all jobs and shut down the Scheduler
     Scheduler.remove_all_jobs()
     Scheduler.shutdown()

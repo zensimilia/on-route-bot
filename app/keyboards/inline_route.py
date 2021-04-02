@@ -3,9 +3,9 @@ from typing import Iterable
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
 
-import app.utils.uchar as uchar
+from app.utils import uchar
 
-cd_routes = CallbackData("routes_menu", "action", "route_id")
+cd_routes = CallbackData('routes_menu', 'action', 'route_id')
 
 
 def kb_route_buttons(route_id: int, is_active: bool) -> InlineKeyboardMarkup:
@@ -22,25 +22,35 @@ def kb_route_buttons(route_id: int, is_active: bool) -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     f'{uchar.EYES} Показать маршрут',
-                    callback_data=cd_routes.new(action='show', route_id=route_id))
+                    callback_data=cd_routes.new(
+                        action='show',
+                        route_id=route_id))
             ],
             [
                 InlineKeyboardButton(
                     f'{uchar.CLOCK} Настроить расписание',
-                    callback_data=cd_routes.new(action='schedule', route_id=route_id)),
+                    callback_data=cd_routes.new(
+                        action='schedule',
+                        route_id=route_id)),
             ],
             [
                 InlineKeyboardButton(
                     f'{status} {toggle}',
-                    callback_data=cd_routes.new(action='toggle', route_id=route_id))
+                    callback_data=cd_routes.new(
+                        action='toggle',
+                        route_id=route_id))
             ],
             [
                 InlineKeyboardButton(
                     f'{uchar.BACK_ARROW} Назад',
-                    callback_data=cd_routes.new(action='list', route_id=False)),
+                    callback_data=cd_routes.new(
+                        action='list',
+                        route_id=False)),
                 InlineKeyboardButton(
                     f'{uchar.WASTEBASKET} Удалить',
-                    callback_data=cd_routes.new(action='delete', route_id=route_id))
+                    callback_data=cd_routes.new(
+                        action='delete',
+                        route_id=route_id))
             ]
         ]
     )
@@ -57,10 +67,14 @@ def kb_route_delete_confirm_buttons(route_id: int) -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     'ДА',
-                    callback_data=cd_routes.new(action="delete_confirm", route_id=route_id)),
+                    callback_data=cd_routes.new(
+                        action='delete_confirm',
+                        route_id=route_id)),
                 InlineKeyboardButton(
                     'НЕТ',
-                    callback_data=cd_routes.new(action="delete_no", route_id=route_id))
+                    callback_data=cd_routes.new(
+                        action='delete_no',
+                        route_id=route_id))
             ]
         ]
     )
@@ -77,10 +91,14 @@ def kb_route_single(route_id: int) -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     f'{uchar.BACK_ARROW} Назад',
-                    callback_data=cd_routes.new(action='select', route_id=route_id)),
+                    callback_data=cd_routes.new(
+                        action='select',
+                        route_id=route_id)),
                 InlineKeyboardButton(
                     f'{uchar.CARDS} Все маршруты',
-                    callback_data=cd_routes.new(action='list', route_id=route_id)),
+                    callback_data=cd_routes.new(
+                        action='list',
+                        route_id=route_id)),
             ]
         ]
     )
@@ -96,7 +114,7 @@ def kb_route_list(routes: Iterable) -> InlineKeyboardMarkup:
 
     for route in routes:
         status = uchar.BELL if route.is_active else uchar.BELL_STROKE
-        cb_data = cd_routes.new(action="select", route_id=route.id)
+        cb_data = cd_routes.new(action='select', route_id=route.id)
         kb.append([
             InlineKeyboardButton(
                 f'{status} {route.name}',

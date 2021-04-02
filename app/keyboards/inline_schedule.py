@@ -1,99 +1,126 @@
 import json
 from typing import Union
 
-from aiogram.types.inline_keyboard import (InlineKeyboardButton,
-                                           InlineKeyboardMarkup)
+from aiogram.types.inline_keyboard import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
 from aiogram.utils.callback_data import CallbackData
 
 from app.keyboards.inline_route import cd_routes
 from app.utils import uchar, cronity
+from app.types import DayOfWeek
 
 cd_schedules = CallbackData(
-    'schedules_menu', 'action', 'schedule_id', 'route_id')
+    'schedules_menu', 'action', 'schedule_id', 'route_id'
+)
 cd_schedule_days = CallbackData('schedule_days', 'days')
-cd_schedule_times = CallbackData('schedule_time', 'time')
+cd_schedule_times = CallbackData('schedule_time', 'time', sep='|')  # fixed sep
 
 
-def kb_schedule_list(schedules: Union[dict, None], route_id: int) -> InlineKeyboardMarkup:
+def kb_schedule_list(
+    schedules: Union[list, None], route_id: int
+) -> InlineKeyboardMarkup:
+    """Display keyboard with list of all schedules."""
     buttons = list()
-    if schedules.count():
+    if schedules is not None:
         for schedule in schedules:
             cron = json.loads(schedule.schedule)
             readable = cronity.humanize(cron)
-            buttons.append([
-                InlineKeyboardButton(
-                    f'{readable}',
-                    callback_data=cd_schedules.new(
-                        'select', schedule.id, False)
-                ),
-            ])
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        f'{readable}',
+                        callback_data=cd_schedules.new(
+                            'select', schedule.id, False
+                        ),
+                    ),
+                ]
+            )
     buttons.append(
         [
             InlineKeyboardButton(
                 f'{uchar.BACK_ARROW} Назад',
-                callback_data=cd_routes.new(action='select', route_id=route_id)),
+                callback_data=cd_routes.new(action='select', route_id=route_id),
+            ),
             InlineKeyboardButton(
                 f'{uchar.NEW} Добавить',
-                callback_data=cd_schedules.new('add', False, route_id=route_id)),
-
+                callback_data=cd_schedules.new('add', False, route_id=route_id),
+            ),
         ]
     )
-    return InlineKeyboardMarkup(
-        inline_keyboard=buttons
-    )
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def kb_schedule_times() -> InlineKeyboardMarkup:
-    """
-    Display keyboard with list of times.
-    """
+    """Display keyboard with list of times."""
     times = list()
     group = list()
     for i in range(0, 24):
         group.append(
             InlineKeyboardButton(
-                f'{i}:00', callback_data=cd_schedule_times.new(time=f'{i}.00')
+                f'{i}:00', callback_data=cd_schedule_times.new(time=f'{i}:00')
             )
         )
         if len(group) == 6:
             times.append(group.copy())
             group.clear()
-    return InlineKeyboardMarkup(
-        inline_keyboard=times
-    )
+    return InlineKeyboardMarkup(inline_keyboard=times)
 
 
 def kb_schedule_days() -> InlineKeyboardMarkup:
-    """
-    Display keyboard with days of week choice.
-    """
+    """Display keyboard with days of week choice."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    'Ежедневно', callback_data=cd_schedule_days.new(days="*"))
+                    DayOfWeek.EVERY.title,
+                    callback_data=cd_schedule_days.new(
+                        days=DayOfWeek.EVERY.cron
+                    ),
+                )
             ],
             [
                 InlineKeyboardButton(
-                    'Рабочие', callback_data=cd_schedule_days.new(days="1-5")),
+                    DayOfWeek.WORK.title,
+                    callback_data=cd_schedule_days.new(
+                        days=DayOfWeek.WORK.cron
+                    ),
+                ),
                 InlineKeyboardButton(
-                    'Выходные', callback_data=cd_schedule_days.new(days="6-0"))
+                    DayOfWeek.END.title,
+                    callback_data=cd_schedule_days.new(days=DayOfWeek.END.cron),
+                ),
             ],
             [
                 InlineKeyboardButton(
-                    'Пн', callback_data=cd_schedule_days.new(days=(1))),
+                    DayOfWeek.MON.short,
+                    callback_data=cd_schedule_days.new(days=DayOfWeek.MON.cron),
+                ),
                 InlineKeyboardButton(
-                    'Вт', callback_data=cd_schedule_days.new(days=(2))),
+                    DayOfWeek.TUE.short,
+                    callback_data=cd_schedule_days.new(days=DayOfWeek.TUE.cron),
+                ),
                 InlineKeyboardButton(
-                    'Ср', callback_data=cd_schedule_days.new(days=(3))),
+                    DayOfWeek.WED.short,
+                    callback_data=cd_schedule_days.new(days=DayOfWeek.WED.cron),
+                ),
                 InlineKeyboardButton(
-                    'Чт', callback_data=cd_schedule_days.new(days=(4))),
+                    DayOfWeek.THU.short,
+                    callback_data=cd_schedule_days.new(days=DayOfWeek.THU.cron),
+                ),
                 InlineKeyboardButton(
-                    'Пт', callback_data=cd_schedule_days.new(days=(5))),
+                    DayOfWeek.FRI.short,
+                    callback_data=cd_schedule_days.new(days=DayOfWeek.FRI.cron),
+                ),
                 InlineKeyboardButton(
-                    'Сб', callback_data=cd_schedule_days.new(days=(6))),
+                    DayOfWeek.SAT.short,
+                    callback_data=cd_schedule_days.new(days=DayOfWeek.SAT.cron),
+                ),
                 InlineKeyboardButton(
-                    'Вс', callback_data=cd_schedule_days.new(days=(0)))
-            ]
+                    DayOfWeek.SUN.short,
+                    callback_data=cd_schedule_days.new(days=DayOfWeek.SUN.cron),
+                ),
+            ],
         ]
     )

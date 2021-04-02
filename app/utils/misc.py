@@ -8,7 +8,7 @@ def is_command(text: str) -> bool:
 
     :param str text:
     """
-    return True if text[0] == "/" else False
+    return text[0] == '/'
 
 
 def is_url(url: str) -> bool:
@@ -19,7 +19,8 @@ def is_url(url: str) -> bool:
     """
     regex = re.compile(
         r'^(?:http)s?://'
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))'
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
+        r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))'
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
     return re.match(regex, url) is not None
 
@@ -43,5 +44,6 @@ async def something_went_wrong(messsage: types.Message, error: str = None):
     """
     if error is None:
         error = 'Что-то пошло не так!'
-    text = f'<b>{error}</b> \nПопробуйте позже или обратитесь к автору бота (ссылка в профиле).'
+    text = f'<b>{error}</b> \n' \
+        'Попробуйте позже или обратитесь к автору бота (ссылка в профиле).'
     await messsage.answer(text)
