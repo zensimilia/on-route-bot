@@ -6,7 +6,6 @@ from aiogram.dispatcher import FSMContext
 from app.keyboards import inline_schedule
 from app.models import Route, Schedule
 from app.states import CreateSchedule
-from app.utils import uchar
 
 
 async def schedule_list(cb: types.CallbackQuery, callback_data: dict):
@@ -60,7 +59,7 @@ async def schedule_add_days(
     Schedule.create(route=route, schedule=json.dumps(schedule), is_active=True)
     callback_data['route_id'] = route.id
     await state.finish()
-    await cb.answer(f'Уведомление добавлено {uchar.OK_HAND} ')
+    await cb.answer('Расписание уведомления добавлено')
     await schedule_list(cb, callback_data=callback_data)
 
 
@@ -80,10 +79,11 @@ async def schedule_toggle(cb: types.CallbackQuery, callback_data: dict):
     """Toggle is_active schedule property."""
     single_schedule = Schedule.get_by_id(callback_data['schedule_id'])
     toggle = not single_schedule.is_active
+    text = 'Уведомления включены' if toggle else 'Уведомления отключены'
     Schedule.update(is_active=toggle).where(
         Schedule.id == single_schedule.id
     ).execute()
-    await cb.answer('toggle')
+    await cb.answer(text)
     await schedule_select(cb, callback_data)
 
 

@@ -6,17 +6,11 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types.callback_query import CallbackQuery
 from aiogram.utils.markdown import hide_link
 
-
-from app.utils import uchar
 from app.keyboards import common, inline_route
 from app.models import Route, User
-from app.providers.yandex import (
-    YAMParser,
-    YAParseError,
-    YARequestError,
-    YAWParser,
-)
+from app.providers import yandex
 from app.states import CreateRoute
+from app.utils import uchar
 from app.utils.misc import something_went_wrong
 
 
@@ -44,9 +38,7 @@ async def route_add_name(message: types.Message, state: FSMContext):
 
 
 async def route_add_url(message: types.Message, state: FSMContext):
-    """
-    Set route url and create route from state.
-    """
+    """Set route url and create route from state."""
     await state.update_data(url=message.text)
     state_data = await state.get_data()
     current_user = User.get(User.uid == message.from_user.id)
@@ -63,9 +55,7 @@ async def route_add_url(message: types.Message, state: FSMContext):
 
 
 async def route_add_error(message: types.Message, state: FSMContext):
-    """
-    Handle errors in create route process.
-    """
+    """Handle errors in create route process."""
     current_state = str(await state.get_state()).split(':')[-1]
     if current_state == 'name':
         await message.answer(
@@ -78,9 +68,7 @@ async def route_add_error(message: types.Message, state: FSMContext):
 
 
 async def route_list(entity: Union[types.Message, types.CallbackQuery]):
-    """
-    Display all user routes by command or callback query.
-    """
+    """Display all user routes by command or callback query."""
     message = (
         'У Вас пока нет ни одного маршрута. '
         'Вы можете создать новый маршрут при помощи команды /routeadd.'
@@ -104,9 +92,7 @@ async def route_list(entity: Union[types.Message, types.CallbackQuery]):
 
 
 async def route_select(cb: types.CallbackQuery, callback_data: dict):
-    """
-    Display selected route with keyboard.
-    """
+    """Display single route actions."""
     route_id = callback_data['route_id']
     route = Route.get_by_id(route_id)
     is_active = route.is_active
@@ -118,22 +104,15 @@ async def route_select(cb: types.CallbackQuery, callback_data: dict):
         await cb.answer(text)
 
     await cb.message.edit_text(
-        str(
-            f'Вы выбрали <b>{route.name}</b>.'
-            '\nЧто вы хотите сделать с этим маршрутом?'
-        ),
+        f'Вы выбрали <b>{route.name}</b>.'
+        '\nЧто вы хотите сделать с этим маршрутом?',
         reply_markup=inline_route.kb_route_buttons(route_id, is_active),
     )
     await cb.answer()
 
 
 async def route_show(cb: types.CallbackQuery, callback_data: dict):
-    """
-    Show specific route information and action buttons.
-
-    :param obj message: Message object.
-    :param int route_id: Route id.
-    """
+    """Show single route information."""
     timestamp = time.ctime()
 
     route_id = callback_data['route_id']
@@ -141,11 +120,11 @@ async def route_show(cb: types.CallbackQuery, callback_data: dict):
     route = Route.get_by_id(route_id)
 
     try:
-        yamp = YAMParser(route.url)  # map parser instance
+        yamp = yandex.YAMParser(route.url)  # map parser instance
         map_center = yamp.coords
 
         # weather parser instance
-        yawp = YAWParser(map_center['lat'], map_center['lon'])
+        yawp = yandex.YAWParser(map_center['lat'], map_center['lon'])
 
         temp = yawp.temp + f'{uchar.DEGREE}C'
         fact = yawp.fact
@@ -155,46 +134,36 @@ async def route_show(cb: types.CallbackQuery, callback_data: dict):
         map_url = hide_link(f'{yamp.map}&{timestamp}')
 
         await cb.message.edit_text(
-            str(
-                f'{map_url}'
-                f'Маршрут <b>{route.name}</b> займет <b>{time_left}</b> '
-                '<a href="{yamp.url}">(открыть)</a>. '
-                f'За окном <b>{temp}</b> {fact} '
-                '<a href="{yawp.url}">(подробнее)</a>.'
-            ),
+            f'{map_url}'
+            f'Маршрут <b>{route.name}</b> займет <b>{time_left}</b> '
+            f'<a href="{yamp.url}">(открыть)</a>. '
+            f'За окном <b>{temp}</b> {fact} '
+            f'<a href="{yawp.url}">(подробнее)</a>.',
             reply_markup=inline_route.kb_route_single(route_id),
         )
         await cb.answer()
 
-    except (YAParseError, YARequestError) as e:
+    except (yandex.YAParseError, yandex.YARequestError) as e:
         await something_went_wrong(cb.message, e)
 
 
 async def route_delete_confirm(cb: CallbackQuery, callback_data: dict):
-    """
-    Delete route from DB and send message.
-
-    :param int route_id: Route id.
-    """
-    route_id = callback_data['route_id']
-
-    route = Route.get_by_id(route_id)
+    """Delete route from DB and send message."""
+    route = Route.get_by_id(callback_data['route_id'])
     route.delete_instance(recursive=True)
 
-    await cb.message.edit_text(
-        f'Маршрут <b>{route.name}</b> успешно удален {uchar.OK_HAND}'
-        '\n\nПосмотрите список всех маршрутов командой /routes.'
-        '\nИли создайте новый маршрут командой /routeadd.'
-    )
-    await cb.answer()
+    await cb.answer('Маршрут успешно удален')
+    await route_list(cb)
 
 
 async def route_delete(cb: types.CallbackQuery, callback_data: dict):
     """Delete route and cascade schedules."""
-    route_id = callback_data['route_id']
-    route = Route.get_by_id(route_id)
+    route = Route.get_by_id(callback_data['route_id'])
+
     await cb.message.edit_text(
         f'Вы уверены, что хотите удалить маршрут <b>{route.name}</b>?',
-        reply_markup=inline_route.kb_route_delete_confirm_buttons(route_id),
+        reply_markup=inline_route.kb_route_delete_confirm_buttons(
+            callback_data['route_id']
+        ),
     )
     await cb.answer()
