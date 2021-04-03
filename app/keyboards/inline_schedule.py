@@ -9,13 +9,53 @@ from aiogram.utils.callback_data import CallbackData
 
 from app.keyboards.inline_route import cd_routes
 from app.utils import uchar, cronity
-from app.types import DayOfWeek
+from app.types import Bell, DayOfWeek
 
 cd_schedules = CallbackData(
     'schedules_menu', 'action', 'schedule_id', 'route_id'
 )
 cd_schedule_days = CallbackData('schedule_days', 'days')
 cd_schedule_times = CallbackData('schedule_time', 'time', sep='|')  # fixed sep
+
+
+def kb_schedule_show(
+    schedule_id: int, route_id: int, is_active: bool
+) -> InlineKeyboardMarkup:
+    """Display keyboard with actions for single schedule."""
+    bell = Bell.by_state(not is_active)
+    toggle = 'Отключить уведомления' if is_active else 'Включить уведомления'
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    f'{bell} {toggle}',
+                    callback_data=cd_schedules.new(
+                        action='toggle',
+                        schedule_id=schedule_id,
+                        route_id=False,
+                    ),
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    f'{uchar.WASTEBASKET} Удалить',
+                    callback_data=cd_schedules.new(
+                        action='delete',
+                        schedule_id=schedule_id,
+                        route_id=route_id,
+                    ),
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    f'{uchar.BACK_ARROW} Назад',
+                    callback_data=cd_routes.new(
+                        action='schedule', route_id=route_id
+                    ),
+                ),
+            ],
+        ]
+    )
 
 
 def kb_schedule_list(
@@ -27,10 +67,11 @@ def kb_schedule_list(
         for schedule in schedules:
             cron = json.loads(schedule.schedule)
             readable = cronity.humanize(cron)
+            bell = Bell.by_state(schedule.is_active)
             buttons.append(
                 [
                     InlineKeyboardButton(
-                        f'{readable}',
+                        f'{bell} {readable}',
                         callback_data=cd_schedules.new(
                             'select', schedule.id, False
                         ),

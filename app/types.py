@@ -1,3 +1,4 @@
+from app.utils import uchar
 import logging
 import re
 from enum import Enum
@@ -89,3 +90,13 @@ class DayOfWeek(Enum):
             titles.append(item.title)
             shorts.append(item.short)
         return DayField(field, separator.join(titles), separator.join(shorts))
+
+
+class Bell(str, Enum):
+    ON = f'{uchar.BELL}'
+    OFF = f'{uchar.BELL_STROKE}'
+
+    @classmethod
+    def by_state(cls, state: bool) -> str:
+        """Returns bell string by state."""
+        return cls.ON.value if state else cls.OFF.value

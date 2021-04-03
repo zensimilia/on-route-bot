@@ -5,9 +5,8 @@ db = SqliteDatabase(Config.DB_FILE)
 
 
 class BaseModel(Model):
-    """
-    Custom base class for all models.
-    """
+    """Custom base class for all models."""
+
     id = AutoField()
     timestamp = TimestampField()
 
