@@ -4,9 +4,8 @@ from .user import User
 
 
 class Route(BaseModel):
-    """
-    Route model class.
-    """
+    """Route model class."""
+
     name = CharField(null=False)
     url = CharField(null=False)
     user = ForeignKeyField(User, backref='routes')

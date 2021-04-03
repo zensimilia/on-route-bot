@@ -4,9 +4,8 @@ from .route import Route
 
 
 class Schedule(BaseModel):
-    """
-    Schedule model class.
-    """
+    """Schedule model class."""
+
     route = ForeignKeyField(Route, backref='schedules')
     schedule = BlobField(null=False)
     is_active = BooleanField(null=False, default=True)

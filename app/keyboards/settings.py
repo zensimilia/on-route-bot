@@ -1,5 +1,9 @@
-from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
-                           KeyboardButton, ReplyKeyboardMarkup)
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+)
 from aiogram.utils.callback_data import CallbackData
 
 from app.utils import uchar
@@ -10,15 +14,14 @@ btn_cancel = InlineKeyboardButton('Отмена', callback_data=cb_cancel)
 
 
 def kb_settings() -> InlineKeyboardMarkup:
-    """
-    Return keyboard with list of settings.
-    """
+    """Return keyboard with list of settings."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
                     f'{uchar.GLOBE} Часовой пояс',
-                    callback_data=cd_settings.new(action='tz', data=False))
+                    callback_data=cd_settings.new(action='tz', data=False),
+                )
             ],
         ]
     )
@@ -31,30 +34,30 @@ def kb_settings_tz() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     'Изменить часовой пояс',
                     callback_data=cd_settings.new(
-                        action='tz-change', data=False)
+                        action='tz-change', data=False
+                    ),
                 )
             ],
             [
                 InlineKeyboardButton(
                     f'{uchar.BACK_ARROW} Назад',
-                    callback_data=cd_settings.new(action='list', data=False)
+                    callback_data=cd_settings.new(action='list', data=False),
                 )
-            ]
+            ],
         ]
     )
 
 
 def kb_settings_user_location() -> ReplyKeyboardMarkup:
-    """
-    Keyboard for get user location.
-    """
+    """Keyboard for get user location."""
     return ReplyKeyboardMarkup(
         [
             [
                 KeyboardButton(
-                    text='Отправить местоположение',
-                    request_location=True)
+                    text='Отправить местоположение', request_location=True
+                )
             ]
         ],
         row_width=1,
-        resize_keyboard=True)
+        resize_keyboard=True,
+    )

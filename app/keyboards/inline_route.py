@@ -3,7 +3,7 @@ from typing import Iterable
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
 
-from app.models.route import Route
+from app.models import Route
 from app.types import Bell
 from app.utils import uchar
 
