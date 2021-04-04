@@ -30,7 +30,7 @@ async def cmd_about(message: types.Message):
         'forecast on your route by schedule. '
         '\nI\'am work yet with '
         '<a href="https://maps.yandex.com">Yandex Maps</a> only.',
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
     )
 
 
@@ -45,7 +45,7 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
     await state.finish()
     await message.answer(
         f'Команда отменена {uchar.OK_HAND}',
-        reply_markup=types.ReplyKeyboardRemove()
+        reply_markup=types.ReplyKeyboardRemove(),
     )
 
 
@@ -54,13 +54,13 @@ async def schedule_test(message: types.Message):
         say_hello,
         trigger=CronTrigger(minute='*/1'),
         id='job',
-        kwargs={'chat': message.chat.id}
+        kwargs={'chat': message.chat.id},
     )
-    await message.answer('Test is run...')
+    message_date = message.date
+    await message.answer(f'Message date: {message_date}')
 
 
 async def say_hello(chat: int):
     await bot.send_message(
-        chat_id=chat,
-        text=f'Hello! Current time is: {datetime.datetime.now()}'
+        chat_id=chat, text=f'Hello! Current time is: {datetime.datetime.now()}'
     )
