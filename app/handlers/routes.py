@@ -1,17 +1,12 @@
-import time
 from typing import Union
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types.callback_query import CallbackQuery
-from aiogram.utils.markdown import hide_link
 
 from app.keyboards import common, inline_route
 from app.models import Route, User
-from app.providers import yandex
 from app.states import CreateRoute
-from app.utils import uchar
-from app.utils.misc import something_went_wrong
 
 
 async def route_add(message: types.Message):
@@ -113,38 +108,17 @@ async def route_select(cb: types.CallbackQuery, callback_data: dict):
 
 async def route_show(cb: types.CallbackQuery, callback_data: dict):
     """Show single route information."""
-    timestamp = time.ctime()
-
-    route_id = callback_data['route_id']
     # get user route from database
-    route = Route.get_by_id(route_id)
+    route = Route.get_by_id(callback_data['route_id'])
+    message_text = route.message()
 
-    try:
-        yamp = yandex.YAMParser(route.url)  # map parser instance
-        map_center = yamp.coords
-
-        # weather parser instance
-        yawp = yandex.YAWParser(map_center['lat'], map_center['lon'])
-
-        temp = yawp.temp + f'{uchar.DEGREE}C'
-        fact = yawp.fact
-        time_left = yamp.time
-
-        # add timestamp to avoid image caching
-        map_url = hide_link(f'{yamp.map}&{timestamp}')
-
+    if not message_text:
+        await cb.answer('Что-то пошло не так!')
+    else:
         await cb.message.edit_text(
-            f'{map_url}'
-            f'Маршрут <b>{route.name}</b> займет <b>{time_left}</b> '
-            f'<a href="{yamp.url}">(открыть)</a>. '
-            f'За окном <b>{temp}</b> {fact} '
-            f'<a href="{yawp.url}">(подробнее)</a>.',
-            reply_markup=inline_route.kb_route_single(route_id),
+            message_text,
+            reply_markup=inline_route.kb_route_single(route.id),
         )
-        await cb.answer()
-
-    except (yandex.YAParseError, yandex.YARequestError) as e:
-        await something_went_wrong(cb.message, e)
 
 
 async def route_delete_confirm(cb: CallbackQuery, callback_data: dict):
