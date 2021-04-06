@@ -43,13 +43,6 @@ async def on_startup(_: Dispatcher):
     create_jobs(sched)
     Scheduler.start()
 
-    # job tests
-    jobs = Scheduler.get_jobs()
-    for job in jobs:
-        Scheduler.reschedule_job(
-            job.id, trigger='cron', minute='*/1', hour='*', day_of_week='*'
-        )
-
     # set bot commands for autocomplete
     await set_bot_commands(bot)
 

@@ -1,4 +1,6 @@
-from peewee import Model, AutoField, TimestampField, SqliteDatabase
+from peewee import AutoField, SqliteDatabase, TimestampField
+from playhouse.signals import Model
+
 from app.config import Config
 
 db = SqliteDatabase(Config.DB_FILE)

@@ -10,6 +10,7 @@ from app.handlers import (
     register_handlers_settings,
 )
 from app.main import dp, on_shutdown, on_startup
+from app.signals import register_signals
 from app.utils.log import configure_logging
 
 
@@ -26,6 +27,9 @@ def main():
     register_handlers_schedules(dp)
     register_handlers_settings(dp)
     register_errors_handler(dp)
+
+    # register models signals
+    register_signals()
 
     # start bot polling
     executor.start_polling(
