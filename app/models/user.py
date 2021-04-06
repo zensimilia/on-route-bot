@@ -1,13 +1,13 @@
-from peewee import CharField, BitField
-from .base import BaseModel
+from .base import Model
+from sqlalchemy import Column, Integer, String
 
 
-class User(BaseModel):
+class User(Model):
     """User model class."""
 
-    username = CharField(null=False)
-    uid = BitField(unique=True, null=False, index=True)
-    timezone = CharField(null=True)
+    __tablename__ = 'users'
+    __mapper_args__ = {'eager_defaults': True}
 
-    class Meta:
-        table_name = 'users'
+    user_id = Column(Integer, unique=True, nullable=False, index=True)
+    username = Column(String, nullable=False)
+    timezone = Column(String, default='Europe/Moscow')

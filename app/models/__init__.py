@@ -1,6 +1,5 @@
-from .base import db
+from .base import session
 from .user import User
-from .route import Route
-from .schedule import Schedule
 
-__all__ = ['db', 'User', 'Route', 'Schedule']
+# from .route import Route
+# from .schedule import Schedule
