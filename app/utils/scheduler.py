@@ -1,7 +1,6 @@
 import json
 import logging
 
-import peewee
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.job import Job
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -9,6 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.config import Config
+from app.db import db_session
 from app.models import Route, Schedule
 
 log = logging.getLogger(__name__)
@@ -25,15 +25,16 @@ Scheduler = AsyncIOScheduler(
 )
 
 
-def get_active_schedules() -> peewee.ModelSelect:
+def get_active_schedules():
     """Returns all schedules with is_active property."""
-    schedules = (
-        Route.select(Route, Schedule)
-        .where(Route.is_active)
-        .join(Schedule)
-        .where(Schedule.is_active)
-    )
+    with db_session() as db:
+        schedules = (
+            db.query(Schedule)
+            .where((Schedule.is_active == True) & (Route.is_active == True))
+            .join(Route)
+        )
     log.info('Found %s active schedules.', schedules.count())
+    print(schedules.all())  # need test
     return schedules
 
 
@@ -47,8 +48,8 @@ async def send_single_route(route):
     await bot.send_message(chat_id=route.user.uid, text=message)
 
 
-def add_job(instance: Schedule) -> Job:
-    trigger = json.loads(instance.schedule)
+def add_job(instance) -> Job:
+    trigger = json.loads(instance.cron)
 
     return Scheduler.add_job(
         send_single_route,
@@ -65,4 +66,4 @@ def add_job(instance: Schedule) -> Job:
 
 def create_jobs(routes) -> None:
     for route in routes:
-        add_job(route.schedule)
+        add_job(route.schedules.first())

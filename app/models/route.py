@@ -26,7 +26,11 @@ class Route(Model):
     url: str = Column(String(), nullable=False)
     is_active: bool = Column(Boolean, nullable=False, default=True)
     schedules: Any = relationship(
-        'Schedule', backref='route', cascade='all, delete', passive_deletes=True
+        'Schedule',
+        backref='route',
+        cascade='all, delete',
+        passive_deletes=True,
+        lazy='dynamic',
     )
 
     def message(self) -> Optional[str]:

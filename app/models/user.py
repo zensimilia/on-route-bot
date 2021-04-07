@@ -15,7 +15,11 @@ class User(Model):
     username: str = Column(String, nullable=False)
     timezone: str = Column(String, default='Europe/Moscow')
     routes: Any = relationship(
-        'Route', backref='user', cascade='all, delete', passive_deletes=True
+        'Route',
+        backref='user',
+        cascade='all, delete',
+        passive_deletes=True,
+        lazy='dynamic',
     )
 
     def __repr__(self):
