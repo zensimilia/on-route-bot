@@ -3,27 +3,26 @@ import time
 from typing import Optional
 
 from aiogram.utils.markdown import hide_link
-from peewee import BooleanField, CharField, ForeignKeyField
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 
-from app.providers import yandex
-from app.utils import uchar
-
-from .base import BaseModel
-from .user import User
+from ..providers import yandex
+from ..utils import uchar
+from .base import Model
 
 log = logging.getLogger(__name__)
 
 
-class Route(BaseModel):
+class Route(Model):
     """Route model class."""
 
-    name = CharField(null=False)
-    url = CharField(null=False)
-    user = ForeignKeyField(User, backref='routes')
-    is_active = BooleanField(null=False, default=True)
+    __tablename__ = 'routes'
 
-    class Meta:
-        table_name = 'routes'
+    name: str = Column(String(64), nullable=False)
+    url: str = Column(String(), nullable=False)
+    user_id: int = Column(
+        Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False
+    )
+    is_active: bool = Column(Boolean, nullable=False, default=True)
 
     def message(self) -> Optional[str]:
         """Returns message about route for sending to user.
