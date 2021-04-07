@@ -15,10 +15,9 @@ db_engine = create_engine('sqlite:///%s' % Config.DB_FILE, echo=Config.DEBUG)
 def db_session():
     session = scoped_session(sessionmaker(bind=db_engine))
     try:
-        session.execute('PRAGMA foreign_keys=ON')
+        session.execute('PRAGMA foreign_keys=ON')  # sqlite cascade delete fix
         yield session
         session.commit()
-        session.flush()
     except:
         log.error('An error has occured in runtime SQL query.')
         session.rollback()

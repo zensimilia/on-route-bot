@@ -4,6 +4,8 @@ from typing import Optional
 
 from aiogram.utils.markdown import hide_link
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
 
 from ..providers import yandex
 from ..utils import uchar
@@ -17,12 +19,15 @@ class Route(Model):
 
     __tablename__ = 'routes'
 
-    name: str = Column(String(64), nullable=False)
-    url: str = Column(String(), nullable=False)
     user_id: int = Column(
         Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False
     )
+    name: str = Column(String(64), nullable=False)
+    url: str = Column(String(), nullable=False)
     is_active: bool = Column(Boolean, nullable=False, default=True)
+    schedules = relationship(
+        'Schedule', backref='route', cascade='all, delete', passive_deletes=True
+    )
 
     def message(self) -> Optional[str]:
         """Returns message about route for sending to user.

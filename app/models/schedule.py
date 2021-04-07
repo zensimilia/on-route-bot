@@ -1,15 +1,14 @@
-from peewee import BlobField, BooleanField, ForeignKeyField
-
-from .base import BaseModel
-from .route import Route
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, LargeBinary
+from .base import Model
 
 
-class Schedule(BaseModel):
+class Schedule(Model):
     """Schedule model class."""
 
-    route = ForeignKeyField(Route, backref='schedules')
-    schedule = BlobField(null=False)
-    is_active = BooleanField(null=False, default=True)
+    __tablename__ = 'schedules'
 
-    class Meta:
-        table_name = 'schedules'
+    route_id = Column(
+        Integer, ForeignKey('routes.id', ondelete='CASCADE'), nullable=False
+    )
+    cron = Column(LargeBinary, nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)

@@ -9,7 +9,7 @@ class User(Model):
 
     __tablename__ = 'users'
 
-    user_id: int = Column(Integer, unique=True, nullable=False, index=True)
+    uid: int = Column(Integer, unique=True, nullable=False, index=True)
     username: str = Column(String, nullable=False)
     timezone: str = Column(String, default='Europe/Moscow')
     routes = relationship(
