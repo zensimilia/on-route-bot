@@ -16,12 +16,12 @@ class Model(metaclass=DeclarativeMeta):
     registry = mapper_registry
     metadata = mapper_registry.metadata
 
-    id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(
+    id: int = Column(Integer, primary_key=True, index=True)
+    created_at: datetime = Column(
         DateTime(timezone=True),
         default=datetime.now(),
     )
-    updated_at = Column(
+    updated_at: datetime = Column(
         DateTime(timezone=True),
         default=datetime.now(),
         onupdate=datetime.now(),

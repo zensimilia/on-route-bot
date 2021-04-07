@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -12,7 +14,7 @@ class User(Model):
     uid: int = Column(Integer, unique=True, nullable=False, index=True)
     username: str = Column(String, nullable=False)
     timezone: str = Column(String, default='Europe/Moscow')
-    routes = relationship(
+    routes: Any = relationship(
         'Route', backref='user', cascade='all, delete', passive_deletes=True
     )
 

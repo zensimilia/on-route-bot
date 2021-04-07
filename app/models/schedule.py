@@ -7,8 +7,8 @@ class Schedule(Model):
 
     __tablename__ = 'schedules'
 
-    route_id = Column(
+    route_id: int = Column(
         Integer, ForeignKey('routes.id', ondelete='CASCADE'), nullable=False
     )
-    cron = Column(LargeBinary, nullable=False)
-    is_active = Column(Boolean, nullable=False, default=True)
+    cron: str = Column(LargeBinary, nullable=False)
+    is_active: bool = Column(Boolean, nullable=False, default=True)
