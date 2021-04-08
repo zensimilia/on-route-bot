@@ -12,16 +12,17 @@ class Model(metaclass=DeclarativeMeta):
 
     __abstract__ = True
     __mapper_args__ = {'eager_defaults': True}
+    __table_args__ = {'sqlite_autoincrement': True}
 
     registry = mapper_registry
     metadata = mapper_registry.metadata
 
-    id: int = Column(Integer, primary_key=True, index=True)
-    created_at: datetime = Column(
+    id = Column(Integer, primary_key=True)
+    created_at = Column(
         DateTime(timezone=True),
         default=datetime.now(),
     )
-    updated_at: datetime = Column(
+    updated_at = Column(
         DateTime(timezone=True),
         default=datetime.now(),
         onupdate=datetime.now(),

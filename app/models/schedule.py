@@ -1,7 +1,7 @@
-from typing import List, TypeVar, Type, Optional
+from typing import List, Optional, Type, TypeVar, Union
+
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, LargeBinary, select
 from sqlalchemy.orm import relationship
-
 
 from app.db import db_session
 
@@ -30,18 +30,27 @@ class Schedule(Model):
     )
 
     @classmethod
-    def get_active(cls: Type[T], route: Optional[Route] = None) -> List[T]:
+    def get_active(
+        cls: Type[T], route: Optional[Union['Route', int]] = None
+    ) -> List[T]:
+        """Get list of active schedules. Parent route needs to be active too.
+
+        Args:
+            route (Route, int): A Route instance or route id. Defaults to None.
+
+        Returns:
+            List of Schedule instances or empty list
+            if no active schedules found.
+        """
         active_route_query = select(Route).where(Route.is_active.__eq__(True))
-        if not route is None:
-            query = (
+        if route is None:  # get all active schedules in active routes
+            stmt = select(cls).where(cls.is_active.__eq__(True))
+        else:  # get specific route active schedules
+            route_id = route if isinstance(route, int) else route.id
+            stmt = (
                 select(cls)
-                .where(
-                    (cls.is_active.__eq__(True))
-                    & (cls.route_id.__eq__(route.id))
-                )
-                .subquery()
+                .where(cls.is_active.__eq__(True))
+                .where(cls.route_id.__eq__(route_id))
             )
-        else:
-            query = select(cls).where(cls.is_active.__eq__(True)).subquery()
         with db_session() as db:
-            return db.query(query).join(active_route_query).all()
+            return db.query(stmt.subquery()).join(active_route_query).all()

@@ -6,7 +6,6 @@ from aiogram.utils.markdown import hide_link
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-
 from ..providers import yandex
 from ..utils import uchar
 from .base import Model
