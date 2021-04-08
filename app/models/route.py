@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Optional
+from typing import Optional
 
 from aiogram.utils.markdown import hide_link
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
@@ -19,18 +19,17 @@ class Route(Model):
 
     __tablename__ = 'routes'
 
-    user_id: int = Column(
+    user_id = Column(
         Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False
     )
-    name: str = Column(String(64), nullable=False)
-    url: str = Column(String(), nullable=False)
-    is_active: bool = Column(Boolean, nullable=False, default=True)
-    schedules: Any = relationship(
+    name = Column(String(64), nullable=False)
+    url = Column(String(), nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+    schedules = relationship(
         'Schedule',
-        backref='route',
+        back_populates='route',
         cascade='all, delete',
         passive_deletes=True,
-        lazy='dynamic',
     )
 
     def message(self) -> Optional[str]:

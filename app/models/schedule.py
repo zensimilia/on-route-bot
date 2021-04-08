@@ -31,25 +31,17 @@ class Schedule(Model):
 
     @classmethod
     def get_active(cls: Type[T], route: Optional[Route] = None) -> List[T]:
+        active_route_query = select(Route).where(Route.is_active.__eq__(True))
         if not route is None:
-            parent_cls = route.__class__
-            with db_session() as db:
-                return (
-                    db.query(cls)
-                    .where(
-                        (cls.is_active.__eq__(True))
-                        & (cls.route_id.__eq__(route.id))
-                    )
-                    .join(parent_cls)
-                    .where(parent_cls.is_active.is_(True))
-                    .all()
+            query = (
+                select(cls)
+                .where(
+                    (cls.is_active.__eq__(True))
+                    & (cls.route_id.__eq__(route.id))
                 )
+                .subquery()
+            )
         else:
-            with db_session() as db:
-                return (
-                    db.query(cls)
-                    .where(cls.is_active.__eq__(True))
-                    .join(Route)
-                    .where(Route.is_active.__eq__(True))
-                    .all()
-                )
+            query = select(cls).where(cls.is_active.__eq__(True)).subquery()
+        with db_session() as db:
+            return db.query(query).join(active_route_query).all()

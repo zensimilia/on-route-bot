@@ -13,7 +13,9 @@ db_engine = create_engine('sqlite:///%s' % Config.DB_FILE, echo=Config.DEBUG)
 
 @contextmanager
 def db_session():
-    session = scoped_session(sessionmaker(bind=db_engine))
+    session = scoped_session(
+        sessionmaker(bind=db_engine, expire_on_commit=False)
+    )
     try:
         session.execute('PRAGMA foreign_keys=ON')  # sqlite cascade delete fix
         yield session
