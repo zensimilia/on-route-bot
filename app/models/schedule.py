@@ -42,15 +42,14 @@ class Schedule(Model):
             List of Schedule instances or empty list
             if no active schedules found.
         """
-        active_route_query = select(Route).where(Route.is_active.__eq__(True))
-        if route is None:  # get all active schedules in active routes
-            stmt = select(cls).where(cls.is_active.__eq__(True))
-        else:  # get specific route active schedules
-            route_id = route if isinstance(route, int) else route.id
-            stmt = (
-                select(cls)
-                .where(cls.is_active.__eq__(True))
-                .where(cls.route_id.__eq__(route_id))
-            )
+        active_routes = select(Route).where(Route.is_active.__eq__(True))
+        if route is not None:
+            route_id = int(route)
+            active_routes = active_routes.where(Route.id.__eq__(route_id))
+        stmt = (
+            select(cls)
+            .where(cls.is_active.__eq__(True))
+            .join(active_routes.cte())
+        )
         with db_session() as db:
-            return db.query(stmt.subquery()).join(active_route_query).all()
+            return db.execute(stmt).scalars().all()

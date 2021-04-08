@@ -31,6 +31,9 @@ class Route(Model):
         passive_deletes=True,
     )
 
+    def __int__(self):
+        return self.id
+
     def message(self) -> Optional[str]:
         """Returns message about route for sending to user.
 

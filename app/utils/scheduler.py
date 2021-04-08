@@ -27,25 +27,22 @@ Scheduler = AsyncIOScheduler(
 
 def get_active_schedules():
     """Returns all schedules with is_active property."""
-    with db_session() as db:
-        schedules = (
-            db.query(Schedule)
-            .where((Schedule.is_active == True) & (Route.is_active == True))
-            .join(Route)
-        )
-    log.info('Found %s active schedules.', schedules.count())
-    print(schedules.all())  # need test
+    schedules = Schedule.get_active()
+    log.info('Found %s active schedules.', len(schedules))
     return schedules
 
 
-async def send_single_route(route):
+async def send_single_route(route_id: int):
     # REFACTOR ME PLS!!!
     from app.main import bot  # pylint: disable=import-outside-toplevel
 
+    with db_session() as db:
+        route = db.get(Route, route_id)
+        uid = route.user.uid
     message = route.message()
     message = f'Уведомление по расписанию:\n{message}'
 
-    await bot.send_message(chat_id=route.user.uid, text=message)
+    await bot.send_message(chat_id=uid, text=message)
 
 
 def add_job(instance) -> Job:
@@ -60,10 +57,10 @@ def add_job(instance) -> Job:
         ),
         id=str(instance.id),
         replace_existing=True,
-        args=[instance.route],
+        args=[instance.route_id],
     )
 
 
-def create_jobs(routes) -> None:
-    for route in routes:
-        add_job(route.schedules.first())
+def create_jobs(schedules) -> None:
+    for schedule in schedules:
+        add_job(schedule)
