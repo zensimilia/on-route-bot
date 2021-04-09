@@ -7,13 +7,12 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from app.config import Config
-from app.db import db_session
+from app.db import db_session, db_engine
 from app.models import Route, Schedule
 
 log = logging.getLogger(__name__)
 
-jobstores = {'default': SQLAlchemyJobStore(f'sqlite:///{Config.DB_FILE}')}
+jobstores = {'default': SQLAlchemyJobStore(engine=db_engine)}
 jobdefaults = {'misfire_grace_time': 30, 'coalesce': True}
 executors = {'default': AsyncIOExecutor()}
 
