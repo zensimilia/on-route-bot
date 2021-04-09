@@ -30,3 +30,10 @@ class Model(metaclass=DeclarativeMeta):
 
     def __repr__(self):
         return '<%s #%s>' % (self.__class__.__name__, self.id)
+
+    def toggle(self) -> bool:
+        """Toggle `is_active` field and returns current state."""
+        if hasattr(self, 'is_active'):
+            self.is_active = not self.is_active
+            return self.is_active
+        raise KeyError  # add some text soon
