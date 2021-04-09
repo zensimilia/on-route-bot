@@ -41,7 +41,7 @@ class Route(Model):
             KeyError: if no route selected.
 
         Returns:
-            str|None: message in HTML format or None if have a problem with
+            String message in HTML format or None if have a problem with
             request or parsing.
         """
         if not self.url:

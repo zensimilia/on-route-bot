@@ -10,9 +10,9 @@ Model.metadata.create_all(db_engine)
 # user.user_id = 9981
 # user.username = 'Private Person'
 
-route = Route()
-route.url = 'https://ya.ru/'
-route.name = 'First route'
+# route = Route()
+# route.url = 'https://ya.ru/'
+# route.name = 'First route'
 # route.user = user
 
 with db_session() as db:
