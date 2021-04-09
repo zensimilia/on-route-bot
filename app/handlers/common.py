@@ -9,6 +9,7 @@ from app.main import bot
 from app.models import User
 from app.utils import uchar
 from app.utils.scheduler import Scheduler
+from app.db import db_session
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +19,11 @@ async def cmd_start(message: types.Message):
 
     :param obj message: Message object.
     """
-    User.create(uid=message.from_user.id, username=message.from_user.username)
+    with db_session() as db:
+        user = User(
+            uid=message.from_user.id, username=message.from_user.username
+        )
+        db.add(user)
     await message.answer('Welcome text!')
 
 

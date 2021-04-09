@@ -65,7 +65,7 @@ def kb_schedule_list(
     buttons = list()
     if schedules is not None:
         for schedule in schedules:
-            cron = json.loads(schedule.schedule)
+            cron = json.loads(schedule.cron)
             readable = cronity.humanize(cron)
             bell = Bell.by_state(schedule.is_active)
             buttons.append(

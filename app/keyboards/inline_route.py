@@ -17,7 +17,9 @@ def kb_route_buttons(route_id: int, is_active: bool) -> InlineKeyboardMarkup:
     :param bool is_active: Is route notifications active.
     """
     bell = Bell.by_state(not is_active)
-    toggle = 'Отключить уведомления' if is_active else 'Включить уведомления'
+    toggle = (
+        'Отключить уведомления' if bool(is_active) else 'Включить уведомления'
+    )
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
