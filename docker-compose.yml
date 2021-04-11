@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+    bot:
+        build: .
+        restart: on-failure
+        stop_signal: SIGINT
+        environment:
+            DEBUG: "False"
+            PYTHONDONTWRITEBYTECODE: 1
+            PYTHONUNBUFFERED: 1
+        volumes:
+            - data:/bot/store/
+
+volumes:
+    data:
+        name: bot-data
