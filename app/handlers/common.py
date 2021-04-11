@@ -3,13 +3,11 @@ import logging
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from apscheduler.triggers.cron import CronTrigger
 
+from app.db import db_session
 from app.main import bot
 from app.models import User
 from app.utils import uchar
-from app.utils.scheduler import Scheduler
-from app.db import db_session
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +22,7 @@ async def cmd_start(message: types.Message):
             uid=message.from_user.id, username=message.from_user.username
         )
         db.add(user)
-    await message.answer('Welcome text!')
+    await message.answer('Welcome text!')  # todo: change welcome text
 
 
 async def cmd_about(message: types.Message):
@@ -52,17 +50,6 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
         f'Команда отменена {uchar.OK_HAND}',
         reply_markup=types.ReplyKeyboardRemove(),
     )
-
-
-async def schedule_test(message: types.Message):
-    Scheduler.add_job(
-        say_hello,
-        trigger=CronTrigger(minute='*/1'),
-        id='job',
-        kwargs={'chat': message.chat.id},
-    )
-    message_date = message.date
-    await message.answer(f'Message date: {message_date}')
 
 
 async def say_hello(chat: int):

@@ -1,12 +1,14 @@
 import logging
-from . import routes, errors, schedules, settings, common
+
 from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher.filters import Text
-from app.states import CreateRoute, CreateSchedule, SetTimezone
+
+from app.keyboards import inline_schedule
 from app.keyboards.inline_route import cd_routes
 from app.keyboards.settings import cd_settings
-from app.keyboards import inline_schedule
+from app.states import CreateRoute, CreateSchedule, SetTimezone
 
+from . import common, errors, routes, schedules, settings
 
 log = logging.getLogger(__name__)
 
@@ -115,7 +117,6 @@ def register_handlers_settings(dp: Dispatcher):
 def register_handlers_common(dp: Dispatcher):
     """Register common handlers in Dispatcher."""
     log.info('Configuring common handlers...')
-    dp.register_message_handler(common.schedule_test, commands='test')
     dp.register_message_handler(common.cmd_start, commands='start')
     dp.register_message_handler(common.cmd_about, commands='about')
     dp.register_message_handler(common.cmd_cancel, commands='cancel', state='*')
