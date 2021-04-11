@@ -24,7 +24,8 @@ DEFAULT_CONFIG = {
     },
     'formatters': {
         'default': {
-            'format': '%(asctime)s %(levelname)-8s: %(name)s - %(message)s',
+            'format': '%(asctime)s %(levelname)s: '
+            '%(name)s in %(funcName)s - %(message)s',
         }
     },
     'loggers': {
