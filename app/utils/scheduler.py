@@ -1,13 +1,15 @@
 import json
 import logging
+from typing import Optional
 
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.job import Job
+from apscheduler.jobstores.base import JobLookupError
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from app.db import db_session, db_engine
+from app.db import db_engine, db_session
 from app.models import Route, Schedule
 
 log = logging.getLogger(__name__)
@@ -58,6 +60,14 @@ def add_job(instance) -> Job:
         replace_existing=True,
         args=[instance.route_id],
     )
+
+
+def remove_job(job_id: int, jobstore: Optional[str] = None) -> None:
+    try:
+        Scheduler.remove_job(job_id, jobstore=jobstore)
+    except JobLookupError as e:
+        log.info('%s - Nothing to remove.', e)
+        pass
 
 
 def create_jobs(schedules) -> None:
