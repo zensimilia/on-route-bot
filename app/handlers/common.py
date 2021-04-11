@@ -1,15 +1,9 @@
-import datetime
-import logging
-
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from app.db import db_session
-from app.main import bot
 from app.models import User
 from app.utils import uchar
-
-log = logging.getLogger(__name__)
 
 
 async def cmd_start(message: types.Message):
@@ -49,10 +43,4 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
     await message.answer(
         f'Команда отменена {uchar.OK_HAND}',
         reply_markup=types.ReplyKeyboardRemove(),
-    )
-
-
-async def say_hello(chat: int):
-    await bot.send_message(
-        chat_id=chat, text=f'Hello! Current time is: {datetime.datetime.now()}'
     )
