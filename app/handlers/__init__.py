@@ -25,16 +25,16 @@ def register_handlers_routes(dp: Dispatcher):
     dp.register_message_handler(routes.route_list, commands='routes')
     dp.register_message_handler(routes.route_add, commands='routeadd')
     dp.register_message_handler(
+        routes.route_add_error, is_name=False, state=CreateRoute.name
+    )
+    dp.register_message_handler(
         routes.route_add_name, is_name=True, state=CreateRoute.name
     )
     dp.register_message_handler(
+        routes.route_add_error, is_url=False, state=CreateRoute.url
+    )
+    dp.register_message_handler(
         routes.route_add_url, is_url=True, state=CreateRoute.url
-    )
-    dp.register_message_handler(
-        routes.route_add_error, is_url=False, state=CreateRoute
-    )
-    dp.register_message_handler(
-        routes.route_add_error, is_name=False, state=CreateRoute
     )
     dp.register_callback_query_handler(
         routes.route_list, cd_routes.filter(action='list')

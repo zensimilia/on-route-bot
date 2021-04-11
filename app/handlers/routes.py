@@ -14,7 +14,7 @@ async def route_add(message: types.Message):
     """Start create new route process."""
     await CreateRoute.name.set()
     await message.answer(
-        '<code>1/2</code> Пожалуйста, выберите название для нового маршрута.',
+        '<code>1/2</code> Пожалуйста, введите название для нового маршрута.',
         reply_markup=common.cancel_button(),
     )
 
@@ -27,7 +27,9 @@ async def route_add_name(message: types.Message, state: FSMContext):
         '<code>2/2</code> Теперь пришлите ссылку на страницу маршрута в '
         '<a href="https://maps.yandex.ru/">Яндекс Картах</a>. '
         'Скопируйте её из адресной строки или '
-        'воспользуйтесь кнопкой "поделиться".',
+        'воспользуйтесь кнопкой "поделиться". Используйте промежуточные точки '
+        'чтобы задать более точный маршрут, иначе будет выбран более '
+        'оптимальный - это может не совпасть с вашими ожиданиями.',
         reply_markup=common.cancel_button(),
         disable_web_page_preview=True,
     )
@@ -43,26 +45,33 @@ async def route_add_url(message: types.Message, state: FSMContext):
         )
         route = Route(url=state_data['url'], name=state_data['name'], user=user)
         db.add(route)
+    await state.finish()
     await message.answer(
-        f'Маршрут "<b>{state_data["name"]}</b>" добавлен.'
-        '\n\nПосмотрите список всех маршрутов командой /routes.'
-        '\nДобавьте еще один маршрут командой /routeadd.',
+        f'Маршрут "<b>{route.name}</b>" добавлен.'
+        '\nПосмотрите список всех маршрутов и настройте уведомления '
+        'командой /routes. \nДобавьте еще один маршрут командой /routeadd.',
         reply_markup=types.ReplyKeyboardRemove(),
     )
-    await state.finish()
 
 
 async def route_add_error(message: types.Message, state: FSMContext):
     """Handle errors in create route process."""
     current_state = str(await state.get_state()).split(':')[-1]
     if current_state == 'name':
-        await message.answer(
-            'Это не похоже на название маршрута. Попробуйте что-нибудь другое.'
+        text = (
+            'Это не похоже на название маршрута. '
+            'Попробуйте что-нибудь другое.'
         )
     elif current_state == 'url':
-        await message.answer(
-            'Наверное в ссылке допущена ошибка. Проверьте и попробуйте еще раз.'
+        text = (
+            'Наверное в ссылке допущена ошибка. '
+            'Проверьте и попробуйте еще раз.'
         )
+    text += (
+        ' Если вы передумали, нажмите кнопку "Отмена" или введите '
+        'команду /cancel.'
+    )
+    await message.answer(text)
 
 
 async def route_list(entity: Union[types.Message, types.CallbackQuery]):
@@ -124,8 +133,8 @@ async def route_show(cb: types.CallbackQuery, callback_data: dict):
     # get user route from database
     with db_session() as db:
         route = db.get(Route, callback_data['route_id'])
-    message_text = route.message()
 
+    message_text = route.message()
     if not message_text:
         await cb.answer('Что-то пошло не так!', show_alert=True)
     else:
@@ -141,7 +150,7 @@ async def route_delete_confirm(cb: CallbackQuery, callback_data: dict):
         route = db.get(Route, callback_data['route_id'])
         db.delete(route)
 
-    await cb.answer('Маршрут успешно удален', show_alert=True)
+    await cb.answer(f'Маршрут "{route.name}" успешно удален', show_alert=True)
     await route_list(cb)
 
 
