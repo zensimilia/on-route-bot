@@ -2,9 +2,8 @@ import logging
 
 from aiogram.dispatcher.dispatcher import Dispatcher
 
-from .is_name import IsName
-from .is_time import IsTime
-from .is_url import IsUrl
+from .is_name import IsNameFilter
+from .is_url import IsUrlFilter
 
 log = logging.getLogger(__name__)
 
@@ -17,9 +16,5 @@ def register_filters(dp: Dispatcher):
         dp.channel_post_handlers,
         dp.edited_channel_post_handlers,
     ]
-    dp.filters_factory.bind(IsName,
-                            event_handlers=text_messages)
-    dp.filters_factory.bind(IsUrl,
-                            event_handlers=text_messages)
-    dp.filters_factory.bind(IsTime,
-                            event_handlers=text_messages)
+    dp.filters_factory.bind(IsNameFilter, event_handlers=text_messages)
+    dp.filters_factory.bind(IsUrlFilter, event_handlers=text_messages)
