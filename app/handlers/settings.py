@@ -4,6 +4,7 @@ from aiogram import types
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types.callback_query import CallbackQuery
 
+from app.db import db_session
 from app.keyboards import settings
 from app.models import User
 from app.states import SetTimezone
@@ -22,11 +23,14 @@ async def settings_list(entity: Union[types.Message, types.CallbackQuery]):
 
 
 async def settings_tz(cb: CallbackQuery):
-    user = User.get(User.uid == cb.from_user.id)
-    text = f'Ваш часовой пояс <b>{user.timezone}</b>.' \
-        if user.timezone \
-        else 'Вы не указали свой часовой пояс. ' \
+    with db_session() as db:
+        user = db.query(User).where(User.uid.__eq__(cb.from_user.id)).first()
+    text = (
+        f'Ваш часовой пояс <b>{user.timezone}</b>.'
+        if user.timezone
+        else 'Вы не указали свой часовой пояс. '
         'Будет использован по умолчанию <b>UTC+3</b> время Московское.'
+    )
     await cb.message.edit_text(text, reply_markup=settings.kb_settings_tz())
     await cb.answer()
 
@@ -40,14 +44,17 @@ async def settings_tz_change(cb: types.CallbackQuery):
         'https://ru.wikipedia.org/wiki/Всемирное_координированное_время'
         '">Подробнее</a> о формате.',
         reply_markup=None,
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
     )
 
 
 async def settings_tz_set(message: types.Message, state: FSMContext):
-    user = User.get(User.uid == message.from_user.id)
     tz = message.text.split(' ')[0].upper()
-    user.update(timezone=tz).execute()
+    with db_session() as db:
+        user = (
+            db.query(User).where(User.uid.__eq__(message.from_user.id)).first()
+        )
+        user.timezone = tz
     await message.answer(
         f'Ваш часовой пояс установлен как <b>{tz}</b>. '
         '\nВернуться к списку настроек /settings.'
@@ -60,4 +67,5 @@ async def settings_tz_error(message: types.Message):
         'Это не похоже на формат <a href="'
         'https://ru.wikipedia.org/wiki/Всемирное_координированное_время">'
         'всемирного координированного времени</a>.',
-        disable_web_page_preview=True)
+        disable_web_page_preview=True,
+    )

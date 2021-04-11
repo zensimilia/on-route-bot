@@ -6,16 +6,22 @@ from aiogram.dispatcher import FSMContext
 from app.keyboards import inline_schedule
 from app.models import Route, Schedule
 from app.states import CreateSchedule
+from app.db import db_session
 
 
 async def schedule_list(cb: types.CallbackQuery, callback_data: dict):
     """List all schedules for specific route."""
-    route_id = callback_data['route_id']
-    route = Route.get_by_id(route_id)
-    schedules = route.schedules
+    with db_session() as db:
+        route = db.get(Route, callback_data['route_id'])
+        schedules = (
+            db.query(Schedule)
+            .where(Schedule.route_id.__eq__(callback_data['route_id']))
+            .all()
+        )
+
     await cb.message.edit_text(
         f'Настройка уведомлений для маршрута <b>{route.name}</b>.',
-        reply_markup=inline_schedule.kb_schedule_list(schedules, route_id),
+        reply_markup=inline_schedule.kb_schedule_list(schedules, route.id),
     )
     await cb.answer()
 
@@ -38,7 +44,7 @@ async def schedule_add_time(
     await CreateSchedule.next()
     await cb.message.edit_text(
         '<code>2/2</code> Теперь выберите дни, '
-        'в которые надо получать уведомления.',
+        'в которые необходимо получать уведомления.',
         reply_markup=inline_schedule.kb_schedule_days(),
     )
 
@@ -50,14 +56,20 @@ async def schedule_add_days(
     state_data = await state.get_data()
     time = state_data['time'].split(':')
     day_of_week = callback_data['days']
-    schedule = {
+    cron = {
         'hour': time[0],
         'minute': time[1],
         'day_of_week': day_of_week,
     }
-    route = Route.get_by_id(CreateSchedule.route_id)
-    Schedule.create(route=route, schedule=json.dumps(schedule), is_active=True)
-    callback_data['route_id'] = route.id
+
+    with db_session() as db:
+        route = db.get(Route, CreateSchedule.route_id)
+        schedule = Schedule(
+            route=route, cron=json.dumps(cron).encode('utf-8'), is_active=True
+        )
+        db.add(schedule)
+        callback_data['route_id'] = route.id
+
     await state.finish()
     await cb.answer('Расписание уведомления добавлено')
     await schedule_list(cb, callback_data=callback_data)
@@ -65,8 +77,10 @@ async def schedule_add_days(
 
 async def schedule_select(cb: types.CallbackQuery, callback_data: dict):
     """Show single schedule."""
-    schedule = Schedule.get_by_id(callback_data['schedule_id'])
-    route = schedule.route
+    with db_session() as db:
+        schedule = db.get(Schedule, callback_data['schedule_id'])
+        route = schedule.route
+
     await cb.message.edit_text(
         f'Редактирование уведомления для маршрута <b>{route.name}</b>',
         reply_markup=inline_schedule.kb_schedule_show(
@@ -77,18 +91,25 @@ async def schedule_select(cb: types.CallbackQuery, callback_data: dict):
 
 async def schedule_toggle(cb: types.CallbackQuery, callback_data: dict):
     """Toggle is_active schedule property."""
-    single_schedule = Schedule.get_by_id(callback_data['schedule_id'])
-    toggle = not single_schedule.is_active
-    text = 'Уведомления включены' if toggle else 'Уведомления отключены'
-    Schedule.update(is_active=toggle).where(
-        Schedule.id == single_schedule.id
-    ).execute()
-    await cb.answer(text)
-    await schedule_select(cb, callback_data)
+    with db_session() as db:
+        schedule = db.get(Schedule, callback_data['schedule_id'])
+        route = schedule.route
+        state = schedule.toggle()
+        alert_text = (
+            'Уведомления включены' if bool(state) else 'Уведомления отключены'
+        )
+
+    await cb.answer(alert_text)
+    await cb.message.edit_reply_markup(
+        inline_schedule.kb_schedule_show(schedule.id, route.id, state)
+    )
 
 
 async def schedule_delete(cb: types.CallbackQuery, callback_data: dict):
     """Delete schedule."""
-    Schedule.delete_by_id(callback_data['schedule_id'])
-    await cb.answer('Расписание уведомления удалено')
+    with db_session() as db:
+        schedule = db.get(Schedule, callback_data['schedule_id'])
+        db.delete(schedule)
+
+    await cb.answer('Расписание уведомления удалено', show_alert=True)
     await schedule_list(cb, callback_data)

@@ -19,17 +19,22 @@ class DayField(NamedTuple):
 
 
 class DayOfWeek(Enum):
-    """Data type for day of week cron field."""
+    """Data type for day of week cron field.
 
-    SUN = DayField('0', 'Воскресенье', 'Вс')
-    MON = DayField('1', 'Понедельник', 'Пн')
-    TUE = DayField('2', 'Вторник', 'Вт')
-    WED = DayField('3', 'Среда', 'Ср')
-    THU = DayField('4', 'Четверг', 'Чт')
-    FRI = DayField('5', 'Пятница', 'Пт')
-    SAT = DayField('6', 'Суббота', 'Сб')
-    WORK = DayField('1-5', 'Рабочие дни', 'Раб')
-    END = DayField('6,0', 'Выходные дни', 'Вых')
+    NOTICE: The first weekday is always monday.
+    Will be fixed in 4.0 release of APScheduler.
+    https://github.com/agronholm/apscheduler/issues/465
+    """
+
+    MON = DayField('0', 'Понедельник', 'Пн')
+    TUE = DayField('1', 'Вторник', 'Вт')
+    WED = DayField('2', 'Среда', 'Ср')
+    THU = DayField('3', 'Четверг', 'Чт')
+    FRI = DayField('4', 'Пятница', 'Пт')
+    SAT = DayField('5', 'Суббота', 'Сб')
+    SUN = DayField('6', 'Воскресенье', 'Вс')
+    WORK = DayField('0-4', 'Рабочие дни', 'Раб')
+    END = DayField('5-6', 'Выходные дни', 'Вых')
     EVERY = DayField('*', 'Ежедневно', 'Ежд')
 
     @property
@@ -50,8 +55,8 @@ class DayOfWeek(Enum):
 
         Example::
 
-            day = DayOfWeek.by_string('1-2')
-            print(day.cron, day.`title) # 1-2 Понедельник-Вторник
+            day = DayOfWeek.by_string('0-1')
+            print(day.cron, day.`title) # 0-1 Понедельник-Вторник
 
         Args:
             field (str): cron field string.

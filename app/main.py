@@ -4,8 +4,9 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from app.config import Config
-from app import models
-from app.utils.scheduler import Scheduler
+from app.db import db_engine
+from app.models.base import Model
+from app.utils.scheduler import Scheduler, create_jobs, get_active_schedules
 
 bot = Bot(token=Config.BOT_TOKEN, parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -13,7 +14,7 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 log = logging.getLogger(__name__)
 
 
-async def set_bot_commands(bot_instance: Bot):
+async def set_bot_commands(bot_: Bot):
     """Sets bot commands that can be selected from the list
     when user start typing a message from '/' symbol.
 
@@ -27,22 +28,19 @@ async def set_bot_commands(bot_instance: Bot):
         types.BotCommand('help', 'помощь'),
         types.BotCommand('about', 'информация о боте'),
         types.BotCommand('settings', 'настройки'),
-        types.BotCommand('cancel', 'отменить текущую команду')
+        types.BotCommand('cancel', 'отменить текущую команду'),
     ]
-    await bot_instance.set_my_commands(commands)
+    await bot_.set_my_commands(commands)
 
 
 async def on_startup(_: Dispatcher):
     """Execute function before Bot start polling."""
     # initialize database and tables
-    models_list = (
-        models.User,
-        models.Route,
-        models.Schedule
-    )
-    models.db.create_tables(models_list)
+    Model.metadata.create_all(db_engine)
 
     # start scheduler jobs
+    sched = get_active_schedules()
+    create_jobs(sched)
     Scheduler.start()
 
     # set bot commands for autocomplete

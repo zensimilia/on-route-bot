@@ -7,7 +7,7 @@ from app.utils.misc import is_url
 
 
 @dataclass
-class IsUrl(BoundFilter):
+class IsUrlFilter(BoundFilter):
     """
     Filtered message should be valid URL.
     """
@@ -17,4 +17,4 @@ class IsUrl(BoundFilter):
 
     async def check(self, message: types.Message) -> bool:
         is_url_valid = is_url(message.text)
-        return is_url_valid and self.is_url
+        return is_url_valid if bool(self.is_url) else not is_url_valid

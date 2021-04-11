@@ -8,6 +8,7 @@ class YAParseError(Exception):
     """
     Raised when parser can't return necessary result.
     """
+
     pass
 
 
@@ -15,6 +16,7 @@ class YARequestError(Exception):
     """
     Raised when parser have problems with request document.
     """
+
     pass
 
 
@@ -42,8 +44,11 @@ class YAWParser:
         Get value of current temperature.
         """
         if not hasattr(self, '_temp'):
-            setattr(self, '_temp', self.get_text(
-                'span', class_='temp__value_with-unit'))
+            setattr(
+                self,
+                '_temp',
+                self.get_text('span', class_='temp__value_with-unit'),
+            )
         return getattr(self, '_temp')
 
     @property
@@ -53,12 +58,11 @@ class YAWParser:
         """
         classes = [
             'weather-maps-fact__nowcast-alert',
-            'weather-maps-fact__condition'
+            'weather-maps-fact__condition',
         ]
         if not hasattr(self, '_fact'):
             # todo: check `weather-maps-fact__condition` if exception
-            setattr(self, '_fact', self.get_text(
-                    'div', class_=classes))
+            setattr(self, '_fact', self.get_text('div', class_=classes))
         return getattr(self, '_fact')
 
     def get_text(self, tag: str, class_: str) -> str:
@@ -74,7 +78,7 @@ class YAWParser:
             else:
                 return self.soup.find(tag, class_=class_).text
         except Exception as e:
-            raise YAParseError('Что-то пошло не так!')
+            raise YAParseError('Что-то пошло не так!') from e
 
     @property
     def soup(self) -> BeautifulSoup:
@@ -96,7 +100,9 @@ class YAWParser:
         try:
             response = requests.get(url, headers=self.HEADERS)
         except Exception as e:
-            raise YARequestError('Возникли проблемы с получением данных!')
+            raise YARequestError(
+                'Возникли проблемы с получением данных!'
+            ) from e
         return response.text
 
 
@@ -123,9 +129,11 @@ class YAMParser:
             setattr(self, '_time', self.get_time())
         return getattr(self, '_time')
 
-    def get_time(self,
-                 tag: str = 'div',
-                 class_: str = 'auto-route-snippet-view__route-title-primary') -> str:
+    def get_time(
+        self,
+        tag: str = 'div',
+        class_: str = 'auto-route-snippet-view__route-title-primary',
+    ) -> str:
         """
         Return route time left.
 
@@ -133,18 +141,18 @@ class YAMParser:
         :param str class_: What class to parse.
         """
         try:
-            return self.soup.find(
-                tag, class_=class_).text
+            return self.soup.find(tag, class_=class_).text
         except Exception as e:
-            raise YAParseError('Что-то пошло не так!')
+            raise YAParseError('Что-то пошло не так!') from e
 
     @property
     def coords(self) -> dict:
         try:
-            coords = parse.parse_qs(parse.urlparse(self.canonical).query)[
-                'll'][0].split(',')
+            coords = parse.parse_qs(parse.urlparse(self.canonical).query)['ll'][
+                0
+            ].split(',')
         except Exception as e:
-            raise YAParseError('Что-то пошло не так!')
+            raise YAParseError('Что-то пошло не так!') from e
         return {
             'lon': float(coords[0]),
             'lat': float(coords[1]),
@@ -170,7 +178,9 @@ class YAMParser:
         try:
             response = requests.get(url, headers=self.HEADERS)
         except Exception as e:
-            raise YARequestError('Возникли проблемы с получением данных!')
+            raise YARequestError(
+                'Возникли проблемы с получением данных!'
+            ) from e
         return response.text
 
     @property
@@ -179,18 +189,26 @@ class YAMParser:
         Returns full page link from short URL.
         """
         try:
-            return parse.unquote(self.soup.find('link', rel='canonical')['href'])
+            return parse.unquote(
+                self.soup.find('link', rel='canonical')['href']
+            )
         except Exception as e:
-            raise YARequestError('Возникли проблемы с получением данных!')
+            raise YARequestError(
+                'Возникли проблемы с получением данных!'
+            ) from e
 
     @property
     def map(self) -> str:
         """
         Returns URL of static map image with traffic layer.
         """
-        rtext = parse.parse_qs(parse.urlparse(self.canonical).query)[
-            'rtext'][0].split('~')
+        rtext = parse.parse_qs(parse.urlparse(self.canonical).query)['rtext'][
+            0
+        ].split('~')
         swaprf = ','.join(reversed(rtext[0].split(',')))
         swaprl = ','.join(reversed(rtext[-1].split(',')))
-        map_url = f'https://static-maps.yandex.ru/1.x/?l=map,trf&size=650,450&bbox={swaprf}~{swaprl}'
+        map_url = (
+            'https://static-maps.yandex.ru/1.x/?'
+            f'l=map,trf&size=650,450&bbox={swaprf}~{swaprl}'
+        )
         return map_url

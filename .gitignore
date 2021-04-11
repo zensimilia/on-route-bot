@@ -4,3 +4,4 @@ __pycache__
 *.sqlite
 .vscode/
 store/
+test.py

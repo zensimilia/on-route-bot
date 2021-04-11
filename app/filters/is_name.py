@@ -5,7 +5,7 @@ from aiogram.dispatcher.filters import BoundFilter
 
 
 @dataclass
-class IsName(BoundFilter):
+class IsNameFilter(BoundFilter):
     """
     Filtered message should or not be starts with special characters.
     """
@@ -14,6 +14,12 @@ class IsName(BoundFilter):
     is_name: bool
 
     async def check(self, message: types.Message) -> bool:
-        chars = ['/', '@', '#', '!', '%', '&',
+        # fmt: off
+        chars = ['/', '@', '#', '!', '%', '&', '\\',
                  '*', '^', '$', '~', '`', '"', '\'']
-        return message.text[0] not in chars and self.is_name
+        # fmt: on
+        return (
+            message.text[0] not in chars
+            if bool(self.is_name)
+            else message.text[0] in chars
+        )
