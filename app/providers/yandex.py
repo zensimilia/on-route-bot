@@ -1,28 +1,31 @@
+import logging
+from typing import Optional, Union
 from urllib import parse
 
 import requests
 from bs4 import BeautifulSoup
+from cached_property import cached_property
+from requests.exceptions import RequestException
+
+from app.providers.weather import AbstractWeather, NoWeatherContent
+
+log = logging.getLogger(__name__)
 
 
 class YAParseError(Exception):
-    """
-    Raised when parser can't return necessary result.
-    """
+    """Raised when parser can't return necessary result."""
 
     pass
 
 
 class YARequestError(Exception):
-    """
-    Raised when parser have problems with request document.
-    """
+    """Raised when parser have problems with request document."""
 
     pass
 
 
-class YAWParser:
-    """
-    Class form parsing info about weather from Yandex Weather.
+class YAWParser(AbstractWeather):
+    """Class form parsing info about weather from Yandex Weather.
 
     :param float lat: Coordinates latitude.
     :param float lon: Coordinates longitude.
@@ -30,80 +33,63 @@ class YAWParser:
 
     PARSER = 'html.parser'  # parser for soup
     HEADERS = {'User-Agent': 'Mozilla/5.0'}  # headers for requests
-    WEATHER_PROVIDER = 'Yandex'
     ENDPOINT = 'https://yandex.ru/pogoda/maps/nowcast'
+    CLASSES = [
+        'weather-maps-fact__nowcast-alert',
+        'weather-maps-fact__condition',
+    ]
 
     def __init__(self, lat: float, lon: float) -> None:
         self.lat = lat
         self.lon = lon
         self.url = self.ENDPOINT + f'?lat={self.lat}&lon={self.lon}'
 
-    @property
+    @cached_property
     def temp(self) -> str:
-        """
-        Get value of current temperature.
-        """
-        if not hasattr(self, '_temp'):
-            setattr(
-                self,
-                '_temp',
-                self.get_text('span', class_='temp__value_with-unit'),
-            )
-        return getattr(self, '_temp')
+        """Get value of current temperature."""
+        return self.get_text(class_='temp__value_with-unit')
 
-    @property
+    @cached_property
     def fact(self) -> str:
-        """
-        Get fact about current weather cast.
-        """
-        classes = [
-            'weather-maps-fact__nowcast-alert',
-            'weather-maps-fact__condition',
-        ]
-        if not hasattr(self, '_fact'):
-            # todo: check `weather-maps-fact__condition` if exception
-            setattr(self, '_fact', self.get_text('div', class_=classes))
-        return getattr(self, '_fact')
+        """Get fact about current weather cast."""
+        return self.get_text(class_=self.CLASSES)
 
-    def get_text(self, tag: str, class_: str) -> str:
-        """
-        Return parsed text from found element by parameters.
+    @cached_property
+    def soup(self) -> BeautifulSoup:
+        """Property, returns `soup` from raw HTML."""
+        html = self._get_http_response(self.url)
+        return BeautifulSoup(html, self.PARSER)
+
+    def get_text(
+        self, class_: Union[str, list], tag: Optional[str] = None
+    ) -> str:
+        """Return parsed text from found element by parameters.
 
         :param str tag: What HTML-tag to parse.
         :param str class_: What class to parse.
         """
-        try:
-            if class_.__class__.__name__ in ('list', 'tuple'):
-                return self.soup.find_all(tag, class_=class_)[0].text
-            else:
-                return self.soup.find(tag, class_=class_).text
-        except Exception as e:
-            raise YAParseError('Что-то пошло не так!') from e
-
-    @property
-    def soup(self) -> BeautifulSoup:
-        """
-        Property, returns `soup` from raw HTML.
-        """
-        if not hasattr(self, '_soup'):
-            html = self._get_http_response(self.url)
-            soup = BeautifulSoup(html, self.PARSER)
-            setattr(self, '_soup', soup)
-        return getattr(self, '_soup')
+        result = self.soup.find(tag, class_=class_)  # type: ignore
+        if result is None:
+            log.error(
+                'Парсер не обнаружил элементы с классами %s на странице %s.',
+                class_,
+                self.url,
+            )
+            raise NoWeatherContent('Что-то пошло не так!') from None
+        return result.text
 
     def _get_http_response(self, url: str) -> str:
-        """
-        Helper method, sends HTTP request and returns response payload.
+        """Helper method, sends HTTP request and returns response payload.
 
         :param str url: The URL to make request for.
         """
         try:
-            response = requests.get(url, headers=self.HEADERS)
-        except Exception as e:
-            raise YARequestError(
-                'Возникли проблемы с получением данных!'
+            return requests.get(url, headers=self.HEADERS).text
+        except RequestException as e:
+            log.error('Возникли проблемы с получением данных по ссылке %s', url)
+            raise NoWeatherContent(
+                'Возникли проблемы с получением данных'
             ) from e
-        return response.text
 
 
 class YAMParser:

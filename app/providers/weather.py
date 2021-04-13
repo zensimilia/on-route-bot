@@ -4,11 +4,12 @@ from app.types import GeoPoint
 
 class NoWeatherContent(Exception):
     """ Raised when no weather cast text return. """
+
     pass
 
 
 class AbstractWeather(ABC):
-    """ Abstract weather class.
+    """Abstract weather class.
 
     Implement your own subclass of web scraping or get by API weather
     data and return current temperature and forecast by properties
@@ -23,13 +24,25 @@ class AbstractWeather(ABC):
     Property ``fact`` must return string with current forecast.
     """
 
-    @abstractmethod
+    ENDPOINT = str()
+
     def __init__(self, position: GeoPoint) -> None:
         """Constructor with at least one required argument.
 
         :param position: A Point object representing geo coordinates.
         """
-        ...
+        self.lat = position.lat
+        self.lon = position.lon
+        self.url = self.ENDPOINT + f'?lat={self.lat}&lon={self.lon}'
+
+    def __new__(cls, *_args, **_kargs):
+        required_class_attributes = ['ENDPOINT', 'HEADERS', 'PARSER']
+        for attr in required_class_attributes:
+            if not hasattr(cls, attr):
+                raise NotImplementedError(
+                    f'Class {cls} lacks required {attr} class attribute'
+                ) from None
+        return object.__new__(cls)
 
     @property
     @abstractmethod
