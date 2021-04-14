@@ -162,7 +162,9 @@ class YAMParser:
     def canonical(self) -> str:
         """Returns full page link from short URL."""
         try:
-            return parse.unquote(self.soup('link', rel='canonical')['href'])
+            return parse.unquote(
+                self.soup.find('link', rel='canonical').get('href')
+            )
         except Exception as e:
             raise YARequestError(
                 'Возникли проблемы с получением данных!'
