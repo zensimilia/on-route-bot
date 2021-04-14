@@ -24,16 +24,9 @@ class AbstractWeather(ABC):
     Property ``fact`` must return string with current forecast.
     """
 
-    ENDPOINT = str()
-
     def __init__(self, position: GeoPoint) -> None:
-        """Constructor with at least one required argument.
-
-        :param position: A Point object representing geo coordinates.
-        """
         self.lat = position.lat
         self.lon = position.lon
-        self.url = self.ENDPOINT + f'?lat={self.lat}&lon={self.lon}'
 
     def __new__(cls, *_args, **_kargs):
         required_class_attributes = ['ENDPOINT', 'HEADERS', 'PARSER']

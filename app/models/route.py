@@ -6,8 +6,8 @@ from aiogram.utils.markdown import hide_link
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from ..providers import yandex
-from ..utils import uchar
+from app.providers import yandex
+
 from .base import Model
 
 log = logging.getLogger(__name__)
@@ -49,12 +49,11 @@ class Route(Model):
 
         try:
             yamp = yandex.YAMParser(self.url)  # map parser instance
-            map_center = yamp.coords
 
             # weather parser instance
-            yawp = yandex.YAWParser(map_center['lat'], map_center['lon'])
+            yawp = yandex.YAWParser(yamp.coords)
 
-            temp = yawp.temp + f'{uchar.DEGREE}C'
+            temp = yawp.temp
             fact = yawp.fact
             time_left = yamp.time
 

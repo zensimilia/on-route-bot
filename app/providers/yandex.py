@@ -1,13 +1,15 @@
 import logging
+from functools import cached_property  # https://stackoverflow.com/a/19979379
 from typing import Optional, Union
 from urllib import parse
 
 import requests
 from bs4 import BeautifulSoup
-from cached_property import cached_property
 from requests.exceptions import RequestException
 
 from app.providers.weather import AbstractWeather, NoWeatherContent
+from app.types import GeoPoint
+from app.utils import uchar
 
 log = logging.getLogger(__name__)
 
@@ -39,15 +41,17 @@ class YAWParser(AbstractWeather):
         'weather-maps-fact__condition',
     ]
 
-    def __init__(self, lat: float, lon: float) -> None:
-        self.lat = lat
-        self.lon = lon
+    def __init__(self, position: GeoPoint) -> None:
+        self.lat = position.lat
+        self.lon = position.lon
         self.url = self.ENDPOINT + f'?lat={self.lat}&lon={self.lon}'
 
     @cached_property
     def temp(self) -> str:
         """Get value of current temperature."""
-        return self.get_text(class_='temp__value_with-unit')
+        return (
+            self.get_text(class_='temp__value_with-unit') + f'{uchar.DEGREE}C'
+        )
 
     @cached_property
     def fact(self) -> str:
@@ -93,8 +97,7 @@ class YAWParser(AbstractWeather):
 
 
 class YAMParser:
-    """
-    Class for parsing info about routes from Yandex Maps.
+    """Class for parsing info about routes from Yandex Maps.
 
     :param str url: The URL from which the HTML originated.
     """
@@ -106,58 +109,44 @@ class YAMParser:
     def __init__(self, url: str) -> None:
         self.url = url
 
-    @property
+    @cached_property
     def time(self) -> str:
-        """
-        Alias for `get_time()` method but with caching and defaults.
-        """
-        if not hasattr(self, '_time'):
-            setattr(self, '_time', self.get_time())
-        return getattr(self, '_time')
+        """Alias for `get_time()` method but with caching and defaults."""
+        return self.get_time()
 
     def get_time(
         self,
         tag: str = 'div',
         class_: str = 'auto-route-snippet-view__route-title-primary',
     ) -> str:
-        """
-        Return route time left.
+        """Return route time left.
 
         :param str tag: What HTML-tag to parse.
         :param str class_: What class to parse.
         """
         try:
-            return self.soup.find(tag, class_=class_).text
+            return self.soup.find(tag, class_=class_).text  # type:ignore
         except Exception as e:
             raise YAParseError('Что-то пошло не так!') from e
 
     @property
-    def coords(self) -> dict:
+    def coords(self) -> GeoPoint:
         try:
-            coords = parse.parse_qs(parse.urlparse(self.canonical).query)['ll'][
-                0
-            ].split(',')
+            url_query = parse.urlparse(self.canonical).query
+            coords = parse.parse_qs(url_query)['ll'][0].split(',')
         except Exception as e:
             raise YAParseError('Что-то пошло не так!') from e
-        return {
-            'lon': float(coords[0]),
-            'lat': float(coords[1]),
-        }
 
-    @property
+        return GeoPoint(lat=float(coords[1]), lon=float(coords[0]))
+
+    @cached_property
     def soup(self) -> BeautifulSoup:
-        """
-        Property, returns `soup` from raw HTML.
-        """
-        if not hasattr(self, '_soup'):
-            html = self._get_http_response(self.url)
-            soup = BeautifulSoup(html, self.PARSER)
-            setattr(self, '_soup', soup)
-        return getattr(self, '_soup')
+        """Property, returns `soup` from raw HTML."""
+        html = self._get_http_response(self.url)
+        return BeautifulSoup(html, self.PARSER)
 
     def _get_http_response(self, url: str) -> str:
-        """
-        Helper method, sends HTTP request and returns response payload.
+        """Helper method, sends HTTP request and returns response payload.
 
         :param str url: The URL to make request for.
         """
@@ -169,15 +158,11 @@ class YAMParser:
             ) from e
         return response.text
 
-    @property
+    @cached_property
     def canonical(self) -> str:
-        """
-        Returns full page link from short URL.
-        """
+        """Returns full page link from short URL."""
         try:
-            return parse.unquote(
-                self.soup.find('link', rel='canonical')['href']
-            )
+            return parse.unquote(self.soup('link', rel='canonical')['href'])
         except Exception as e:
             raise YARequestError(
                 'Возникли проблемы с получением данных!'
@@ -185,9 +170,7 @@ class YAMParser:
 
     @property
     def map(self) -> str:
-        """
-        Returns URL of static map image with traffic layer.
-        """
+        """Returns URL of static map image with traffic layer."""
         rtext = parse.parse_qs(parse.urlparse(self.canonical).query)['rtext'][
             0
         ].split('~')
