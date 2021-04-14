@@ -37,9 +37,10 @@ Telegram bot will warn you about traffic jams on your route by schedule.
 - **DEBUG** - (bool) Display debugging information in terminal session. Default: _False_.
 - **LOG_CONFIG** - (dict) [Configuring](https://docs.python.org/3/library/logging.config.html) the logging module from a dictionary for `dictConfig()` function. Default: see `DEFAULT_CONFIG` in _utils/log.py_.
 
-## Requirements
+## Minimal requirements
 
-Any OS with **Python** >=3.6.0, 1 core CPU and 512 Mb of RAM.
+Any OS with version of **Python** >= 3.8.
+Hardware specs: 1 core CPU, 512 Mb of RAM.
 
 - beautifulsoup4
 - python-dotenv
