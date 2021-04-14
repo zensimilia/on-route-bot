@@ -45,6 +45,5 @@ class AbstractWeather(ABC):
     def fact(self) -> str:
         ...
 
-    @classmethod
-    def __str__(cls) -> str:
-        return f'{cls.temp} {cls.fact}.'
+    def __str__(self) -> str:
+        return f'{self.temp} {self.fact}.'

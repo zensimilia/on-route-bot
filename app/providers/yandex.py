@@ -6,7 +6,9 @@ from urllib import parse
 import requests
 from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
+from requests.models import Response
 
+from app.providers.maps import AbstractMaps, NoMapContent
 from app.providers.weather import AbstractWeather, NoWeatherContent
 from app.types import GeoPoint
 from app.utils import uchar
@@ -26,7 +28,7 @@ class YARequestError(Exception):
     pass
 
 
-class YAWParser(AbstractWeather):
+class YandexWeather(AbstractWeather):
     """Class form parsing info about weather from Yandex Weather.
 
     :param float lat: Coordinates latitude.
@@ -61,7 +63,7 @@ class YAWParser(AbstractWeather):
     @cached_property
     def soup(self) -> BeautifulSoup:
         """Property, returns `soup` from raw HTML."""
-        html = self._get_http_response(self.url)
+        html = self._get_http_response(self.url).text
         return BeautifulSoup(html, self.PARSER)
 
     def get_text(
@@ -82,13 +84,13 @@ class YAWParser(AbstractWeather):
             raise NoWeatherContent('Что-то пошло не так!') from None
         return result.text
 
-    def _get_http_response(self, url: str) -> str:
+    def _get_http_response(self, url: str) -> Response:
         """Helper method, sends HTTP request and returns response payload.
 
         :param str url: The URL to make request for.
         """
         try:
-            return requests.get(url, headers=self.HEADERS).text
+            return requests.get(url, headers=self.HEADERS)
         except RequestException as e:
             log.error('Возникли проблемы с получением данных по ссылке %s', url)
             raise NoWeatherContent(
@@ -96,7 +98,7 @@ class YAWParser(AbstractWeather):
             ) from e
 
 
-class YAMParser:
+class YandexMaps(AbstractMaps):
     """Class for parsing info about routes from Yandex Maps.
 
     :param str url: The URL from which the HTML originated.
@@ -104,7 +106,7 @@ class YAMParser:
 
     PARSER = 'html.parser'  # parser for soup
     HEADERS = {'User-Agent': 'Mozilla/5.0'}  # headers for requests
-    MAP_PROVIDER = 'Yandex'
+    CLASSES = ['auto-route-snippet-view__route-title-primary']
 
     def __init__(self, url: str) -> None:
         self.url = url
@@ -112,32 +114,40 @@ class YAMParser:
     @cached_property
     def time(self) -> str:
         """Alias for `get_time()` method but with caching and defaults."""
-        return self.get_time()
+        time = self.get_time()
+        if time is not None:
+            return time
+        else:
+            raise NoMapContent('Что-то пошло не так!') from None
 
     def get_time(
         self,
-        tag: str = 'div',
-        class_: str = 'auto-route-snippet-view__route-title-primary',
-    ) -> str:
+        class_: Optional[Union[str, list]] = None,
+        tag: Optional[str] = None,
+    ) -> Optional[str]:
         """Return route time left.
 
         :param str tag: What HTML-tag to parse.
         :param str class_: What class to parse.
         """
-        try:
-            return self.soup.find(tag, class_=class_).text
-        except Exception as e:
-            raise YAParseError('Что-то пошло не так!') from e
+        class_ = class_ or self.CLASSES
+        return self.soup.find(
+            tag, class_=class_
+        ).text  # raise if find returns None
 
     @property
-    def coords(self) -> GeoPoint:
+    def coords(self) -> Optional[GeoPoint]:
+        url_query = parse.urlparse(str(self.canonical)).query
+        query_dict = parse.parse_qs(url_query)
         try:
-            url_query = parse.urlparse(self.canonical).query
-            coords = parse.parse_qs(url_query)['ll'][0].split(',')
-        except Exception as e:
-            raise YAParseError('Что-то пошло не так!') from e
-
-        return GeoPoint(lat=float(coords[1]), lon=float(coords[0]))
+            coords = query_dict['ll'][0].split(',')
+            return GeoPoint(lat=float(coords[1]), lon=float(coords[0]))
+        except KeyError:
+            log.warning(
+                'Can\'t parse canonical URL (%s) to get coordinates.',
+                self.canonical,
+            )
+            return None
 
     @cached_property
     def soup(self) -> BeautifulSoup:
@@ -152,30 +162,26 @@ class YAMParser:
         """
         try:
             response = requests.get(url, headers=self.HEADERS)
-        except Exception as e:
-            raise YARequestError(
-                'Возникли проблемы с получением данных!'
-            ) from e
+        except RequestException as e:
+            raise NoMapContent('Возникли проблемы с получением данных!') from e
         return response.text
 
     @cached_property
-    def canonical(self) -> str:
-        """Returns full page link from short URL."""
+    def canonical(self) -> Optional[str]:
+        """Returns full link to map page from short URL."""
+        link = self.soup.find('link', rel='canonical') or dict()
         try:
-            return parse.unquote(
-                self.soup.find('link', rel='canonical').get('href')
-            )
-        except Exception as e:
-            raise YARequestError(
-                'Возникли проблемы с получением данных!'
-            ) from e
+            return parse.unquote(str(link.get('href')))
+        except TypeError:
+            log.warning('Can\'t get canonical URL from %s.', self.url)
+            return None
 
     @property
     def map(self) -> str:
         """Returns URL of static map image with traffic layer."""
-        rtext = parse.parse_qs(parse.urlparse(self.canonical).query)['rtext'][
-            0
-        ].split('~')
+        rtext = parse.parse_qs(parse.urlparse(str(self.canonical)).query)[
+            'rtext'
+        ][0].split('~')
         swaprf = ','.join(reversed(rtext[0].split(',')))
         swaprl = ','.join(reversed(rtext[-1].split(',')))
         map_url = (
