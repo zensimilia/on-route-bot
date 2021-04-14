@@ -24,9 +24,9 @@ class AbstractWeather(ABC):
     Property ``fact`` must return string with current forecast.
     """
 
+    @abstractmethod
     def __init__(self, position: GeoPoint) -> None:
-        self.lat = position.lat
-        self.lon = position.lon
+        ...
 
     def __new__(cls, *_args, **_kargs):
         required_class_attributes = ['ENDPOINT', 'HEADERS', 'PARSER']
@@ -37,12 +37,10 @@ class AbstractWeather(ABC):
                 ) from None
         return object.__new__(cls)
 
-    @property
     @abstractmethod
     def temp(self) -> str:
         ...
 
-    @property
     @abstractmethod
     def fact(self) -> str:
         ...

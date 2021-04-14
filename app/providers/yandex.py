@@ -72,7 +72,7 @@ class YAWParser(AbstractWeather):
         :param str tag: What HTML-tag to parse.
         :param str class_: What class to parse.
         """
-        result = self.soup.find(tag, class_=class_)  # type: ignore
+        result = self.soup.find(tag, class_=class_)
         if result is None:
             log.error(
                 'Парсер не обнаружил элементы с классами %s на странице %s.',
@@ -125,7 +125,7 @@ class YAMParser:
         :param str class_: What class to parse.
         """
         try:
-            return self.soup.find(tag, class_=class_).text  # type:ignore
+            return self.soup.find(tag, class_=class_).text
         except Exception as e:
             raise YAParseError('Что-то пошло не так!') from e
 
