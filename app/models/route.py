@@ -7,6 +7,8 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.providers import yandex
+from app.providers.weather import NoWeatherContent
+from app.providers.maps import NoMapContent
 
 from .base import Model
 
@@ -45,30 +47,23 @@ class Route(Model):
             request or parsing.
         """
         if not self.url:
-            raise KeyError  # todo: add message
+            raise KeyError  # TODO: add message
+
+        timestamp = time.time()
+        maps = yandex.YandexMaps(self.url)
 
         try:
-            yamp = yandex.YAMParser(self.url)  # map parser instance
+            weather = yandex.YandexWeather(maps.coords)
 
-            # weather parser instance
-            yawp = yandex.YAWParser(yamp.coords)
-
-            temp = yawp.temp
-            fact = yawp.fact
-            time_left = yamp.time
-
-            timestamp = time.time()
             # add timestamp to avoid image caching
-            map_url = hide_link(f'{yamp.map}&{timestamp}')
+            map_url = hide_link(f'{maps.map}&{timestamp}')
 
             return (
                 f'{map_url}'
-                f'Маршрут <b>{self.name}</b> займет <b>{time_left}</b> '
-                f'<a href="{yamp.url}">(открыть)</a>. '
-                f'За окном <b>{temp}</b> {fact} '
-                f'<a href="{yawp.url}">(подробнее)</a>.'
+                f'Маршрут <b>{self.name}</b> займет <b>{maps.time}</b> '
+                f'<a href="{maps.url}">(открыть)</a>. '
+                f'За окном <b>{weather.temp}</b> {weather.fact} '
+                f'<a href="{maps.url}">(подробнее)</a>.'
             )
-        except (yandex.YAParseError, yandex.YARequestError) as e:
-            log.warning('Can\'t get map or weather: %s', e)
-
-        return None
+        except (NoMapContent, NoWeatherContent):
+            return None

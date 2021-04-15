@@ -16,18 +16,6 @@ from app.utils import uchar
 log = logging.getLogger(__name__)
 
 
-class YAParseError(Exception):
-    """Raised when parser can't return necessary result."""
-
-    pass
-
-
-class YARequestError(Exception):
-    """Raised when parser have problems with request document."""
-
-    pass
-
-
 class YandexWeather(AbstractWeather):
     """Class form parsing info about weather from Yandex Weather.
 
@@ -114,29 +102,30 @@ class YandexMaps(AbstractMaps):
     @cached_property
     def time(self) -> str:
         """Alias for `get_time()` method but with caching and defaults."""
-        time = self.get_time()
-        if time is not None:
-            return time
-        else:
-            raise NoMapContent('Что-то пошло не так!') from None
+        return self.get_time()
 
     def get_time(
         self,
         class_: Optional[Union[str, list]] = None,
         tag: Optional[str] = None,
-    ) -> Optional[str]:
-        """Return route time left.
+    ) -> str:
+        """Return route time left. Get it by parsing page and find by tag and
+        class names specified in fn attributes.
 
         :param str tag: What HTML-tag to parse.
-        :param str class_: What class to parse.
+        :param str class_: What class to parse. Defaults: self.CLASSES list.
         """
         class_ = class_ or self.CLASSES
-        return self.soup.find(
-            tag, class_=class_
-        ).text  # raise if find returns None
+        try:
+            return self.soup.find(tag, class_=class_).text
+        except AttributeError as e:
+            log.warning(
+                'Can\'t get time left for route from page %s.', self.url
+            )
+            raise NoMapContent('Информация о маршруте недоступна') from e
 
     @property
-    def coords(self) -> Optional[GeoPoint]:
+    def coords(self) -> GeoPoint:
         url_query = parse.urlparse(str(self.canonical)).query
         query_dict = parse.parse_qs(url_query)
         try:
@@ -147,7 +136,9 @@ class YandexMaps(AbstractMaps):
                 'Can\'t parse canonical URL (%s) to get coordinates.',
                 self.canonical,
             )
-            return None
+            raise NoMapContent(
+                'Невозможно получить координаты маршрута'
+            ) from None
 
     @cached_property
     def soup(self) -> BeautifulSoup:
@@ -163,25 +154,26 @@ class YandexMaps(AbstractMaps):
         try:
             response = requests.get(url, headers=self.HEADERS)
         except RequestException as e:
+            log.error('Request error for URL %s.', url)
             raise NoMapContent('Возникли проблемы с получением данных!') from e
         return response.text
 
     @cached_property
     def canonical(self) -> Optional[str]:
         """Returns full link to map page from short URL."""
-        link = self.soup.find('link', rel='canonical') or dict()
-        try:
-            return parse.unquote(str(link.get('href')))
-        except TypeError:
+        link = self.soup.find('link', rel='canonical')
+        if link is None:
             log.warning('Can\'t get canonical URL from %s.', self.url)
             return None
+        return parse.unquote(link.get('href'))
 
     @property
-    def map(self) -> str:
+    def map(self) -> Optional[str]:
         """Returns URL of static map image with traffic layer."""
-        rtext = parse.parse_qs(parse.urlparse(str(self.canonical)).query)[
-            'rtext'
-        ][0].split('~')
+        if self.canonical is None:
+            return None
+        url_query = parse.urlparse(self.canonical).query
+        rtext = parse.parse_qs(url_query)['rtext'][0].split('~')
         swaprf = ','.join(reversed(rtext[0].split(',')))
         swaprl = ','.join(reversed(rtext[-1].split(',')))
         map_url = (
