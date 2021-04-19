@@ -17,6 +17,7 @@ DEFAULT_CONFIG = {
             'class': 'logging.handlers.RotatingFileHandler',
             'level': 'WARNING',
             'formatter': 'default',
+            'encoding': 'UTF-8',
             'maxBytes': 1e6,
             'filename': 'store/log.txt',
             'backupCount': 3,
