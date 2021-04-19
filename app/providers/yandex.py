@@ -95,6 +95,7 @@ class YandexMaps(AbstractMaps):
     PARSER = 'html.parser'  # parser for soup
     HEADERS = {'User-Agent': 'Mozilla/5.0'}  # headers for requests
     CLASSES = ['auto-route-snippet-view__route-title-primary']
+    ENDPOINT = 'https://static-maps.yandex.ru/1.x'
 
     def __init__(self, url: str) -> None:
         self.url = url
@@ -176,8 +177,9 @@ class YandexMaps(AbstractMaps):
         rtext = parse.parse_qs(url_query)['rtext'][0].split('~')
         swaprf = ','.join(reversed(rtext[0].split(',')))
         swaprl = ','.join(reversed(rtext[-1].split(',')))
-        map_url = (
-            'https://static-maps.yandex.ru/1.x/?'
-            f'l=map,trf&size=650,450&bbox={swaprf}~{swaprl}'
-        )
-        return map_url
+        url_params = {
+            'l': 'map,trf',
+            'size': '650,450',
+            'bbox': '%s~%s' % (swaprf, swaprl),
+        }
+        return self.ENDPOINT + '?' + parse.urlencode(url_params)
