@@ -5,6 +5,20 @@ from app.db import db_session
 from app.models import User
 from app.utils import uchar
 
+WELCOME_TEXT = (
+    'Чтобы начать пользоваться ботом, необходимо создать первый маршрут и '
+    'настроить для него расписание уведомлений. Вот несколько полезных команд:'
+    '\n'
+    '\n/routes - список ваших маршрутов'
+    '\n/routeadd - добавить новый маршрут'
+    '\n'
+    '\n/help - помощь'
+    '\n/settings - настройки'
+    '\n/about - информация о боте'
+    '\n'
+    '\n/cancel - отменить текущую команду'
+)
+
 
 async def cmd_start(message: types.Message):
     """Show welcome message and register user.
@@ -12,11 +26,13 @@ async def cmd_start(message: types.Message):
     :param obj message: Message object.
     """
     with db_session() as db:
-        user = User(
-            uid=message.from_user.id, username=message.from_user.username
-        )
-        db.add(user)
-    await message.answer('Welcome text!')  # todo: change welcome text
+        user = db.query(User).filter(User.uid.__eq__(message.from_user.id))
+        if not user:
+            new_user = User(
+                uid=message.from_user.id, username=message.from_user.username
+            )
+            db.add(new_user)
+    await message.answer(WELCOME_TEXT)
 
 
 async def cmd_about(message: types.Message):
