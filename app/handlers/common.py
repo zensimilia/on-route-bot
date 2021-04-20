@@ -2,8 +2,9 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from app.db import db_session
-from app.models import User
+from app.models import User, Route, Schedule
 from app.utils import uchar
+from sqlalchemy import func
 
 WELCOME_TEXT = (
     'Чтобы начать пользоваться ботом, необходимо создать первый маршрут и '
@@ -18,6 +19,25 @@ WELCOME_TEXT = (
     '\n'
     '\n/cancel - отменить текущую команду'
 )
+
+ABOUT_TEXT = (
+    'Привет! Я бот, который поможет тебе быть в курсе дорожной обстановки '
+    'на твоем маршруте. Я показываю время в пути по маршруту, прогноз погоды и '
+    'карту с дорожной ситуацией. Ты можешь добавить столько маршрутов, сколько '
+    'тебе потребуется, добавить для них уведомления и я буду присылать тебе '
+    'сообщения с обстановкой в удобное для тебя время. Я пока работаю только с '
+    'Yandex Maps. Надеюсь этот сервис тебе подходит. Удачи на дорогах!'
+    '\n\n'
+    '<b>Контакты</b>'
+    '\nПо вопросам и предложениям пиши @zensimilia.'
+    '\n\n'
+    '<b>Статистика</b>'
+    '\nПользователи: %(users)s'
+    '\nМаршруты: %(routes)s'
+    '\nУведомления: %(schedules)s'
+)
+
+HELP_TEXT = 'Soon...'
 
 
 async def cmd_start(message: types.Message):
@@ -37,14 +57,18 @@ async def cmd_start(message: types.Message):
 
 async def cmd_about(message: types.Message):
     """Show information about bot."""
-    await message.answer(
-        'Hi! I\'m the <b>Traffic Assistant Bot</b>. '
-        '\nI will warn you about traffic jams and weather '
-        'forecast on your route by schedule. '
-        '\nI\'am work yet with '
-        '<a href="https://maps.yandex.com">Yandex Maps</a> only.',
-        disable_web_page_preview=True,
-    )
+    stat = dict()
+    with db_session() as db:
+        stat['users'] = db.query(func.count(User.id)).scalar()
+        stat['routes'] = db.query(func.count(Route.id)).scalar()
+        stat['schedules'] = db.query(func.count(Schedule.id)).scalar()
+
+    await message.answer(ABOUT_TEXT % stat)
+
+
+async def cmd_help(message: types.Message):
+    """Show information about bot."""
+    await message.answer(HELP_TEXT)
 
 
 async def cmd_cancel(message: types.Message, state: FSMContext):
