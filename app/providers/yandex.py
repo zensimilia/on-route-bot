@@ -1,4 +1,5 @@
 import logging
+import json
 from functools import cached_property  # https://stackoverflow.com/a/19979379
 from typing import Optional, Union
 from urllib import parse
@@ -127,15 +128,13 @@ class YandexMaps(AbstractMaps):
 
     @property
     def coords(self) -> GeoPoint:
-        url_query = parse.urlparse(str(self.canonical)).query
-        query_dict = parse.parse_qs(url_query)
+        query = self.query
         try:
-            coords = query_dict['ll'][0].split(',')
+            coords = query['ll'].split(',')
             return GeoPoint(lat=float(coords[1]), lon=float(coords[0]))
         except KeyError:
             log.warning(
-                'Can\'t parse canonical URL (%s) to get coordinates.',
-                self.canonical,
+                'Can\'t get coords from json config.',
             )
             raise NoMapContent(
                 'Невозможно получить координаты маршрута'
@@ -160,21 +159,23 @@ class YandexMaps(AbstractMaps):
         return response.text
 
     @cached_property
-    def canonical(self) -> Optional[str]:
+    def query(self) -> Optional[dict]:
         """Returns full link to map page from short URL."""
-        link = self.soup.find('link', rel='canonical')
-        if link is None:
-            log.warning('Can\'t get canonical URL from %s.', self.url)
+        json_config = self.soup.find('script', class_='config-view')
+
+        if json_config is None:
+            log.warning('Can\'t get json config from %s.', self.url)
             return None
-        return parse.unquote(link.get('href'))
+        else:
+            json_config = json.loads(json_config.string)
+        return json_config['query']
 
     @property
     def map(self) -> Optional[str]:
         """Returns URL of static map image with traffic layer."""
-        if self.canonical is None:
+        if self.query is None:
             return None
-        url_query = parse.urlparse(self.canonical).query
-        rtext = parse.parse_qs(url_query)['rtext'][0].split('~')
+        rtext = self.query['rtext'].split('~')
         swaprf = ','.join(reversed(rtext[0].split(',')))
         swaprl = ','.join(reversed(rtext[-1].split(',')))
         url_params = {
