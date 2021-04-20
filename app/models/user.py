@@ -23,6 +23,6 @@ class User(Model):
         return '<%s #%s (user_id=%s, username="%s")>' % (
             self.__class__.__name__,
             self.id,
-            self.user_id,
+            self.uid,
             self.username,
         )

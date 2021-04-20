@@ -119,6 +119,7 @@ def register_handlers_common(dp: Dispatcher):
     log.info('Configuring common handlers...')
     dp.register_message_handler(common.cmd_start, commands='start')
     dp.register_message_handler(common.cmd_about, commands='about')
+    dp.register_message_handler(common.cmd_help, commands='help')
     dp.register_message_handler(common.cmd_cancel, commands='cancel', state='*')
     dp.register_message_handler(
         common.cmd_cancel, Text(equals='отмена', ignore_case=True), state='*'

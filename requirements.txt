@@ -1,7 +1,6 @@
 aiogram==2.11.2
 APScheduler==3.7.0
 beautifulsoup4==4.9.3
-cached-property==1.5.2
 pydantic==1.8.1
 python-dotenv==0.15.0
 requests==2.25.1

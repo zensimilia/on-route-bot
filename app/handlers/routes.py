@@ -41,9 +41,14 @@ async def route_add_url(message: types.Message, state: FSMContext):
     state_data = await state.get_data()
     with db_session() as db:
         user = (
-            db.query(User).where(User.uid.__eq__(message.from_user.id)).first()
+            db.query(User)
+            .where(User.uid.__eq__(message.from_user.id))  # type: ignore
+            .first()
         )
-        route = Route(url=state_data['url'], name=state_data['name'], user=user)
+
+        route = Route(
+            url=state_data['url'], name=state_data['name'], user=user
+        )  # type: ignore
         db.add(route)
     await state.finish()
     await message.answer(
@@ -57,6 +62,7 @@ async def route_add_url(message: types.Message, state: FSMContext):
 async def route_add_error(message: types.Message, state: FSMContext):
     """Handle errors in create route process."""
     current_state = str(await state.get_state()).split(':')[-1]
+    text = str()
     if current_state == 'name':
         text = (
             'Это не похоже на название маршрута. '
@@ -108,7 +114,7 @@ async def route_select(cb: types.CallbackQuery, callback_data: dict):
     """Display single route actions."""
     route_id = callback_data['route_id']
     with db_session() as db:
-        route = db.get(Route, route_id)
+        route = db.get(Route, route_id)  # type: ignore
         state = route.is_active
 
         if callback_data['action'] == 'toggle':
@@ -132,7 +138,7 @@ async def route_show(cb: types.CallbackQuery, callback_data: dict):
     """Show single route information."""
     # get user route from database
     with db_session() as db:
-        route = db.get(Route, callback_data['route_id'])
+        route = db.get(Route, callback_data['route_id'])  # type: ignore
 
     message_text = route.message()
     if not message_text:
@@ -147,7 +153,7 @@ async def route_show(cb: types.CallbackQuery, callback_data: dict):
 async def route_delete_confirm(cb: CallbackQuery, callback_data: dict):
     """Delete route from DB and send message."""
     with db_session() as db:
-        route = db.get(Route, callback_data['route_id'])
+        route = db.get(Route, callback_data['route_id'])  # type: ignore
         db.delete(route)
 
     await cb.answer(f'Маршрут "{route.name}" успешно удален', show_alert=True)
@@ -157,7 +163,7 @@ async def route_delete_confirm(cb: CallbackQuery, callback_data: dict):
 async def route_delete(cb: types.CallbackQuery, callback_data: dict):
     """Delete route and cascade schedules."""
     with db_session() as db:
-        route = db.get(Route, callback_data['route_id'])
+        route = db.get(Route, callback_data['route_id'])  # type: ignore
 
     await cb.message.edit_text(
         f'Вы уверены, что хотите удалить маршрут <b>{route.name}</b>?',
