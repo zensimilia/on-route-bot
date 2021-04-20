@@ -69,7 +69,9 @@ async def cmd_start(message: types.Message):
     :param obj message: Message object.
     """
     with db_session() as db:
-        user = db.query(User).filter(User.uid.__eq__(message.from_user.id))
+        user = (
+            db.query(User).filter(User.uid.__eq__(message.from_user.id)).first()
+        )
         if not user:
             new_user = User(
                 uid=message.from_user.id, username=message.from_user.username
