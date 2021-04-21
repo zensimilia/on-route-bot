@@ -8,6 +8,7 @@ from app.db import db_session
 from app.keyboards import settings
 from app.models import User
 from app.states import SetTimezone
+from app.utils import uchar
 
 
 async def settings_list(entity: Union[types.Message, types.CallbackQuery]):
@@ -24,14 +25,12 @@ async def settings_list(entity: Union[types.Message, types.CallbackQuery]):
 
 async def settings_tz(cb: CallbackQuery):
     with db_session() as db:
-        user = db.query(User).where(User.uid.__eq__(cb.from_user.id)).first()
-    text = (
-        f'Ваш часовой пояс <b>{user.timezone}</b>.'
-        if user.timezone
-        else 'Вы не указали свой часовой пояс. '
-        'Будет использован по умолчанию <b>UTC+3</b> время Московское.'
+        user = db.query(User).filter(User.uid.__eq__(cb.from_user.id)).first()
+
+    await cb.message.edit_text(
+        f'Ваш часовой пояс <b>{user.timezone}</b>.',
+        reply_markup=settings.kb_settings_tz(),
     )
-    await cb.message.edit_text(text, reply_markup=settings.kb_settings_tz())
     await cb.answer()
 
 
@@ -51,15 +50,14 @@ async def settings_tz_change(cb: types.CallbackQuery):
 async def settings_tz_set(message: types.Message, state: FSMContext):
     tz = message.text.split(' ')[0].upper()
     with db_session() as db:
-        user = (
-            db.query(User).where(User.uid.__eq__(message.from_user.id)).first()
+        db.query(User).filter(User.uid.__eq__(message.from_user.id)).update(
+            {User.timezone: tz}
         )
-        user.timezone = tz
-    await message.answer(
-        f'Ваш часовой пояс установлен как <b>{tz}</b>. '
-        '\nВернуться к списку настроек /settings.'
-    )
     await state.finish()
+    await message.answer(
+        f'Вы успешно изменили часовой пояс {uchar.OK_HAND}',
+        reply_markup=settings.kb_settings_back(),
+    )
 
 
 async def settings_tz_error(message: types.Message):

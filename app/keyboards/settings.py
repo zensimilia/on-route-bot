@@ -1,8 +1,6 @@
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    KeyboardButton,
-    ReplyKeyboardMarkup,
 )
 from aiogram.utils.callback_data import CallbackData
 
@@ -48,16 +46,15 @@ def kb_settings_tz() -> InlineKeyboardMarkup:
     )
 
 
-def kb_settings_user_location() -> ReplyKeyboardMarkup:
-    """Keyboard for get user location."""
-    return ReplyKeyboardMarkup(
-        [
+def kb_settings_back() -> InlineKeyboardMarkup:
+    """Keyboard for get user back to list of settings."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
             [
-                KeyboardButton(
-                    text='Отправить местоположение', request_location=True
+                InlineKeyboardButton(
+                    f'{uchar.BACK_ARROW} Назад',
+                    callback_data=cd_settings.new(action='list', data=False),
                 )
-            ]
-        ],
-        row_width=1,
-        resize_keyboard=True,
+            ],
+        ]
     )
