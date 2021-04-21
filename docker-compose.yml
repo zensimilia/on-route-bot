@@ -9,6 +9,7 @@ services:
             DEBUG: "False"
             PYTHONDONTWRITEBYTECODE: 1
             PYTHONUNBUFFERED: 1
+            TZ: "Europe/Moscow"
         volumes:
             - data:/bot/store/
 
