@@ -128,11 +128,10 @@ class YandexMaps(AbstractMaps):
 
     @property
     def coords(self) -> GeoPoint:
-        query = self.query
         try:
-            coords = query['ll'].split(',')
+            coords = self.query['ll'].split(',')
             return GeoPoint(lat=float(coords[1]), lon=float(coords[0]))
-        except KeyError:
+        except (KeyError, TypeError):
             log.warning(
                 'Can\'t get coords from json config.',
             )

@@ -8,6 +8,7 @@ from app.keyboards import common, inline_route
 from app.models import Route, User
 from app.states import CreateRoute
 from app.db import db_session
+from app.utils.misc import extract_url
 
 
 async def route_add(message: types.Message):
@@ -39,16 +40,13 @@ async def route_add_url(message: types.Message, state: FSMContext):
     """Set route url and create route from state."""
     await state.update_data(url=message.text)
     state_data = await state.get_data()
+    url = extract_url(state_data['url'])
     with db_session() as db:
         user = (
-            db.query(User)
-            .where(User.uid.__eq__(message.from_user.id))  # type: ignore
-            .first()
+            db.query(User).filter(User.uid.__eq__(message.from_user.id)).first()
         )
 
-        route = Route(
-            url=state_data['url'], name=state_data['name'], user=user
-        )  # type: ignore
+        route = Route(url=url, name=state_data['name'], user=user)
         db.add(route)
     await state.finish()
     await message.answer(
@@ -70,8 +68,8 @@ async def route_add_error(message: types.Message, state: FSMContext):
         )
     elif current_state == 'url':
         text = (
-            'Наверное в ссылке допущена ошибка. '
-            'Проверьте и попробуйте еще раз.'
+            'Наверное в ссылке допущена ошибка или '
+            'сообщение не содержит ссылку. Проверьте и попробуйте еще раз.'
         )
     text += (
         ' Если вы передумали, нажмите кнопку "Отмена" или введите '
