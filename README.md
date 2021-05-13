@@ -1,4 +1,4 @@
-# traffic-assistant-bot
+# on-route-bot
 
 Telegram bot will warn you about traffic jams on your route by schedule.
 
