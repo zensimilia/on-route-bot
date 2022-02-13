@@ -1,6 +1,7 @@
 import logging
 import json
-from functools import cached_property  # https://stackoverflow.com/a/19979379
+from functools import cached_property
+from posixpath import split  # https://stackoverflow.com/a/19979379
 from typing import Optional, Union
 from urllib import parse
 
@@ -129,11 +130,13 @@ class YandexMaps(AbstractMaps):
     @property
     def coords(self) -> GeoPoint:
         try:
-            coords = self.query['ll'].split(',')
-            return GeoPoint(lat=float(coords[1]), lon=float(coords[0]))
+            coords = self.query['config']['mapRegion']
+            return GeoPoint(
+                lat=float(coords['latitude']), lon=float(coords['longitude'])
+            )
         except (KeyError, TypeError):
             log.warning(
-                'Can\'t get coords from json config.',
+                'Can\'t get coords from query string.',
             )
             raise NoMapContent(
                 'Невозможно получить координаты маршрута'
@@ -160,23 +163,24 @@ class YandexMaps(AbstractMaps):
     @cached_property
     def query(self) -> Optional[dict]:
         """Returns full link to map page from short URL."""
-        json_config = self.soup.find('script', class_='config-view')
+        json_config = self.soup.find('script', class_='state-view')
 
         if json_config is None:
             log.warning('Can\'t get json config from %s.', self.url)
             return None
         else:
             json_config = json.loads(json_config.string)
-        return json_config['query']
+        return json_config
 
     @property
     def map(self) -> Optional[str]:
         """Returns URL of static map image with traffic layer."""
+        url_query = parse.parse_qs(self.url)
+        bounds = url_query['rtext'][0].split('~')
         if self.query is None:
             return None
-        rtext = self.query['rtext'].split('~')
-        swaprf = ','.join(reversed(rtext[0].split(',')))
-        swaprl = ','.join(reversed(rtext[-1].split(',')))
+        swaprf = ','.join(reversed(bounds[0].split(',')))
+        swaprl = ','.join(reversed(bounds[-1].split(',')))
         url_params = {
             'l': 'map,trf',
             'size': '650,450',
