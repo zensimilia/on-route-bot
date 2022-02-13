@@ -1,7 +1,8 @@
 import logging
 import json
 from functools import cached_property
-from posixpath import split  # https://stackoverflow.com/a/19979379
+
+# from posixpath import split  # https://stackoverflow.com/a/19979379
 from typing import Optional, Union
 from urllib import parse
 
@@ -119,13 +120,15 @@ class YandexMaps(AbstractMaps):
         :param str class_: What class to parse. Defaults: self.CLASSES list.
         """
         class_ = class_ or self.CLASSES
-        try:
-            return self.soup.find(tag, class_=class_).text
-        except AttributeError as e:
+        time_tag = self.soup.find(tag, class_=class_)
+
+        if time_tag is None:
             log.warning(
                 'Can\'t get time left for route from page %s.', self.url
             )
-            raise NoMapContent('Информация о маршруте недоступна') from e
+            raise NoMapContent('Информация о маршруте недоступна')
+
+        return time_tag.text
 
     @property
     def coords(self) -> GeoPoint:
@@ -161,16 +164,14 @@ class YandexMaps(AbstractMaps):
         return response.text
 
     @cached_property
-    def query(self) -> Optional[dict]:
+    def query(self) -> dict:
         """Returns full link to map page from short URL."""
         json_config = self.soup.find('script', class_='state-view')
 
         if json_config is None:
             log.warning('Can\'t get json config from %s.', self.url)
-            return None
-        else:
-            json_config = json.loads(json_config.string)
-        return json_config
+            raise NoMapContent('Возникли проблемы с получением данных!')
+        return json.loads(str(json_config.string))
 
     @property
     def map(self) -> Optional[str]:
@@ -184,6 +185,6 @@ class YandexMaps(AbstractMaps):
         url_params = {
             'l': 'map,trf',
             'size': '650,450',
-            'bbox': '%s~%s' % (swaprf, swaprl),
+            'bbox': f'{swaprf}~{swaprl}',
         }
         return self.ENDPOINT + '?' + parse.urlencode(url_params)
