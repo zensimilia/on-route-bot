@@ -9,7 +9,7 @@ from app.config import Config
 log = logging.getLogger(__name__)
 
 db_engine = create_engine(
-    'sqlite:///%s' % Config.DB_FILE,
+    f'sqlite:///{Config.DB_FILE}',
     echo=Config.DEBUG,
     isolation_level='AUTOCOMMIT',
 )
