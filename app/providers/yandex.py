@@ -1,7 +1,6 @@
 import logging
 import json
 from functools import cached_property
-from posixpath import split  # https://stackoverflow.com/a/19979379
 from typing import Optional, Union
 from urllib import parse
 
@@ -95,7 +94,28 @@ class YandexMaps(AbstractMaps):
     """
 
     PARSER = 'html.parser'  # parser for soup
-    HEADERS = {'User-Agent': 'Mozilla/5.0'}  # headers for requests
+    # headers for requests
+    HEADERS = {
+        'Accept': (
+            'text/html,application/xhtml+xml,application/xml;q=0.9,'
+            'image/webp,image/apng,*/*;q=0.8,'
+            'application/signed-exchange;v=b3;q=0.9'
+        ),
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Connection': 'keep-alive',
+        'Host': 'market.yandex.ru',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': (
+            'Mozilla/5.0 (X11; Linux x86_64) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/83.0.4103.61 '
+            'Safari/537.36'
+        ),
+    }
     CLASSES = ['auto-route-snippet-view__route-title-primary']
     ENDPOINT = 'https://static-maps.yandex.ru/1.x'
 
@@ -175,8 +195,9 @@ class YandexMaps(AbstractMaps):
     @property
     def map(self) -> Optional[str]:
         """Returns URL of static map image with traffic layer."""
-        url_query = parse.parse_qs(self.url)
-        bounds = url_query['rtext'][0].split('~')
+        # url_query = parse.parse_qs(self.url)
+        url_query = self.query['config']['query']['rtext']
+        bounds = url_query.split('~')
         if self.query is None:
             return None
         swaprf = ','.join(reversed(bounds[0].split(',')))
@@ -184,6 +205,6 @@ class YandexMaps(AbstractMaps):
         url_params = {
             'l': 'map,trf',
             'size': '650,450',
-            'bbox': '%s~%s' % (swaprf, swaprl),
+            'bbox': f'{swaprf}~{swaprl}',
         }
         return self.ENDPOINT + '?' + parse.urlencode(url_params)
