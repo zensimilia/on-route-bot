@@ -52,10 +52,14 @@ Hardware specs: 1 core CPU, 512 Mb of RAM.
 
 ## Docker
 
-Soon...
+```console
+docker-compose up -d
+```
+
+Use additional parameter `--build` after changes the source or *pull* updates from repo.
 
 ## Development and contribution
 
-- **Formatting**: default is `autopep8`, but `black` allowed with _-S_ param (don't format single quotes).
+- **Formatting**: default is **autopep8**, but **black** allowed with `-S` param (don't format single quotes).
 
-- **Linting**: before commit check your code by `pylint`. Config at _.pylintrc_ file.
+- **Linting**: before commit check your code by **pylint**. Config at _.pylintrc_ file.
