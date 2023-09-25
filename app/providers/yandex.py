@@ -116,7 +116,7 @@ class YandexMaps(AbstractMaps):
             'Safari/537.36'
         ),
     }
-    CLASSES = ['auto-route-snippet-view__route-title-primary']
+    CLASSES = ['auto-route-snippet-view__route-duration']
     ENDPOINT = 'https://static-maps.yandex.ru/1.x'
 
     def __init__(self, url: str) -> None:
