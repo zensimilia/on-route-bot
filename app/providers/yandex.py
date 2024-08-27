@@ -1,5 +1,5 @@
-import logging
 import json
+import logging
 from functools import cached_property
 from typing import Optional, Union
 from urllib import parse
@@ -24,25 +24,40 @@ class YandexWeather(AbstractWeather):
     :param float lon: Coordinates longitude.
     """
 
-    PARSER = 'html.parser'  # parser for soup
-    HEADERS = {'User-Agent': 'Mozilla/5.0'}  # headers for requests
-    ENDPOINT = 'https://yandex.ru/pogoda/maps/nowcast'
-    CLASSES = [
-        'weather-maps-fact__nowcast-alert',
-        'weather-maps-fact__condition',
-    ]
+    PARSER = "html.parser"  # parser for soup
+    HEADERS = {
+        "Accept": (
+            "text/html,application/xhtml+xml,application/xml;q=0.9,"
+            "image/webp,image/apng,*/*;q=0.8,"
+            "application/signed-exchange;v=b3;q=0.9"
+        ),
+        "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Connection": "keep-alive",
+        "Host": "market.yandex.ru",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/83.0.4103.61 "
+            "Safari/537.36"
+        ),
+    }
+    ENDPOINT = "https://yandex.ru/pogoda/"
+    CLASSES = ["maps-widget-fact__title"]
 
     def __init__(self, position: GeoPoint) -> None:
         self.lat = position.lat
         self.lon = position.lon
-        self.url = self.ENDPOINT + f'?lat={self.lat}&lon={self.lon}'
+        self.url = self.ENDPOINT + f"?lat={self.lat}&lon={self.lon}"
 
     @cached_property
     def temp(self) -> str:
         """Get value of current temperature."""
-        return (
-            self.get_text(class_='temp__value_with-unit') + f'{uchar.DEGREE}C'
-        )
+        return self.get_text(class_="temp__value_with-unit") + f"{uchar.DEGREE}C"
 
     @cached_property
     def fact(self) -> str:
@@ -53,11 +68,10 @@ class YandexWeather(AbstractWeather):
     def soup(self) -> BeautifulSoup:
         """Property, returns `soup` from raw HTML."""
         html = self._get_http_response(self.url).text
+        print(html)
         return BeautifulSoup(html, self.PARSER)
 
-    def get_text(
-        self, class_: Union[str, list], tag: Optional[str] = None
-    ) -> str:
+    def get_text(self, class_: Union[str, list], tag: Optional[str] = None) -> str:
         """Return parsed text from found element by parameters.
 
         :param str tag: What HTML-tag to parse.
@@ -66,11 +80,11 @@ class YandexWeather(AbstractWeather):
         result = self.soup.find(tag, class_=class_)
         if result is None:
             log.error(
-                'Парсер не обнаружил элементы с классами %s на странице %s.',
+                "Парсер не обнаружил элементы с классами %s на странице %s.",
                 class_,
                 self.url,
             )
-            raise NoWeatherContent('Что-то пошло не так!') from None
+            raise NoWeatherContent("Что-то пошло не так!") from None
         return result.text
 
     def _get_http_response(self, url: str) -> Response:
@@ -79,12 +93,10 @@ class YandexWeather(AbstractWeather):
         :param str url: The URL to make request for.
         """
         try:
-            return requests.get(url, headers=self.HEADERS)
+            return requests.get(url, headers=self.HEADERS, timeout=10)
         except RequestException as e:
-            log.error('Возникли проблемы с получением данных по ссылке %s', url)
-            raise NoWeatherContent(
-                'Возникли проблемы с получением данных'
-            ) from e
+            log.error("Возникли проблемы с получением данных по ссылке %s", url)
+            raise NoWeatherContent("Возникли проблемы с получением данных") from e
 
 
 class YandexMaps(AbstractMaps):
@@ -93,31 +105,31 @@ class YandexMaps(AbstractMaps):
     :param str url: The URL from which the HTML originated.
     """
 
-    PARSER = 'html.parser'  # parser for soup
+    PARSER = "html.parser"  # parser for soup
     # headers for requests
     HEADERS = {
-        'Accept': (
-            'text/html,application/xhtml+xml,application/xml;q=0.9,'
-            'image/webp,image/apng,*/*;q=0.8,'
-            'application/signed-exchange;v=b3;q=0.9'
+        "Accept": (
+            "text/html,application/xhtml+xml,application/xml;q=0.9,"
+            "image/webp,image/apng,*/*;q=0.8,"
+            "application/signed-exchange;v=b3;q=0.9"
         ),
-        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Connection': 'keep-alive',
-        'Host': 'market.yandex.ru',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Upgrade-Insecure-Requests': '1',
-        'User-Agent': (
-            'Mozilla/5.0 (X11; Linux x86_64) '
-            'AppleWebKit/537.36 (KHTML, like Gecko) '
-            'Chrome/83.0.4103.61 '
-            'Safari/537.36'
+        "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Connection": "keep-alive",
+        "Host": "market.yandex.ru",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/83.0.4103.61 "
+            "Safari/537.36"
         ),
     }
-    CLASSES = ['auto-route-snippet-view__route-duration']
-    ENDPOINT = 'https://static-maps.yandex.ru/1.x'
+    CLASSES = ["auto-route-snippet-view__route-duration"]
+    ENDPOINT = "https://static-maps.yandex.ru/1.x"
 
     def __init__(self, url: str) -> None:
         self.url = url
@@ -142,27 +154,23 @@ class YandexMaps(AbstractMaps):
         time_tag = self.soup.find(tag, class_=class_)
 
         if time_tag is None:
-            log.warning(
-                'Can\'t get time left for route from page %s.', self.url
-            )
-            raise NoMapContent('Информация о маршруте недоступна')
+            log.warning("Can't get time left for route from page %s.", self.url)
+            raise NoMapContent("Информация о маршруте недоступна")
 
         return time_tag.text
 
     @property
     def coords(self) -> GeoPoint:
         try:
-            coords = self.query['config']['mapRegion']
+            coords = self.query["config"]["mapRegion"]
             return GeoPoint(
-                lat=float(coords['latitude']), lon=float(coords['longitude'])
+                lat=float(coords["latitude"]), lon=float(coords["longitude"])
             )
         except (KeyError, TypeError):
             log.warning(
-                'Can\'t get coords from query string.',
+                "Can't get coords from query string.",
             )
-            raise NoMapContent(
-                'Невозможно получить координаты маршрута'
-            ) from None
+            raise NoMapContent("Невозможно получить координаты маршрута") from None
 
     @cached_property
     def soup(self) -> BeautifulSoup:
@@ -176,35 +184,35 @@ class YandexMaps(AbstractMaps):
         :param str url: The URL to make request for.
         """
         try:
-            response = requests.get(url, headers=self.HEADERS)
+            response = requests.get(url, headers=self.HEADERS, timeout=10)
         except RequestException as e:
-            log.error('Request error for URL %s.', url)
-            raise NoMapContent('Возникли проблемы с получением данных!') from e
+            log.error("Request error for URL %s.", url)
+            raise NoMapContent("Возникли проблемы с получением данных!") from e
         return response.text
 
     @cached_property
     def query(self) -> dict:
         """Returns full link to map page from short URL."""
-        json_config = self.soup.find('script', class_='state-view')
+        json_config = self.soup.find("script", class_="state-view")
 
         if json_config is None:
-            log.warning('Can\'t get json config from %s.', self.url)
-            raise NoMapContent('Возникли проблемы с получением данных!')
+            log.warning("Can't get json config from %s.", self.url)
+            raise NoMapContent("Возникли проблемы с получением данных!")
         return json.loads(str(json_config.string))
 
     @property
     def map(self) -> Optional[str]:
         """Returns URL of static map image with traffic layer."""
         # url_query = parse.parse_qs(self.url)
-        url_query = self.query['config']['query']['rtext']
-        bounds = url_query.split('~')
+        url_query = self.query["config"]["query"]["rtext"]
+        bounds = url_query.split("~")
         if self.query is None:
             return None
-        swaprf = ','.join(reversed(bounds[0].split(',')))
-        swaprl = ','.join(reversed(bounds[-1].split(',')))
+        swaprf = ",".join(reversed(bounds[0].split(",")))
+        swaprl = ",".join(reversed(bounds[-1].split(",")))
         url_params = {
-            'l': 'map,trf',
-            'size': '650,450',
-            'bbox': f'{swaprf}~{swaprl}',
+            "l": "map,trf",
+            "size": "650,450",
+            "bbox": f"{swaprf}~{swaprl}",
         }
-        return self.ENDPOINT + '?' + parse.urlencode(url_params)
+        return self.ENDPOINT + "?" + parse.urlencode(url_params)

@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
+
 from app.types import GeoPoint
 
 
 class NoWeatherContent(Exception):
-    """ Raised when no weather cast text return. """
-
-    pass
+    """Raised when no weather cast text return."""
 
 
 class AbstractWeather(ABC):
@@ -25,25 +24,22 @@ class AbstractWeather(ABC):
     """
 
     @abstractmethod
-    def __init__(self, position: GeoPoint) -> None:
-        ...
+    def __init__(self, position: GeoPoint) -> None: ...
 
     def __new__(cls, *_args, **_kargs):
-        required_class_attributes = ['ENDPOINT', 'HEADERS', 'PARSER']
+        required_class_attributes = ["ENDPOINT", "HEADERS", "PARSER"]
         for attr in required_class_attributes:
             if not hasattr(cls, attr):
                 raise NotImplementedError(
-                    f'Class {cls} lacks required {attr} class attribute'
+                    f"Class {cls} lacks required {attr} class attribute"
                 ) from None
         return object.__new__(cls)
 
     @abstractmethod
-    def temp(self) -> str:
-        ...
+    def temp(self) -> str: ...
 
     @abstractmethod
-    def fact(self) -> str:
-        ...
+    def fact(self) -> str: ...
 
     def __str__(self) -> str:
-        return f'{self.temp} {self.fact}.'
+        return f"{self.temp} {self.fact}."

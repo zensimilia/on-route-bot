@@ -7,8 +7,8 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.providers import yandex
-from app.providers.weather import NoWeatherContent
 from app.providers.maps import NoMapContent
+from app.providers.weather import NoWeatherContent
 
 from .base import Model
 
@@ -18,18 +18,18 @@ log = logging.getLogger(__name__)
 class Route(Model):
     """Route model class."""
 
-    __tablename__ = 'routes'
+    __tablename__ = "routes"
 
     user_id = Column(
-        Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     name = Column(String(64), nullable=False)
     url = Column(String(), nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
     schedules = relationship(
-        'Schedule',
-        back_populates='route',
-        cascade='all, delete',
+        "Schedule",
+        back_populates="route",
+        cascade="all, delete",
         passive_deletes=True,
     )
 
@@ -50,20 +50,24 @@ class Route(Model):
             raise KeyError  # TODO: add message
 
         timestamp = time.time()
-        maps = yandex.YandexMaps(self.url)
 
         try:
-            weather = yandex.YandexWeather(maps.coords)
-
+            maps = yandex.YandexMaps(self.url)
             # add timestamp to avoid image caching
-            map_url = hide_link(f'{maps.map}&{timestamp}')
-
-            return (
-                f'{map_url}'
-                f'Маршрут <b>{self.name}</b> займет <b>{maps.time}</b> '
+            map_url = hide_link(f"{maps.map}&{timestamp}")
+            route_text = (
+                f"{map_url}"
+                f"Маршрут <b>{self.name}</b> займет <b>{maps.time}</b> "
                 f'<a href="{maps.url}">(открыть)</a>. '
-                f'За окном <b>{weather.temp}</b> {weather.fact} '
-                f'<a href="{maps.url}">(подробнее)</a>.'
             )
-        except (NoMapContent, NoWeatherContent):
+
+            weather = yandex.YandexWeather(maps.coords)
+            weather_text = (
+                f"За окном <b>{weather.temp}</b> {weather.fact} "
+                f'<a href="{weather.url}">(подробнее)</a>.'
+            )
+        except NoWeatherContent:
+            weather_text = ""
+        except NoMapContent:
             return None
+        return f"{route_text}{weather_text}"
